@@ -1,0 +1,308 @@
+
+########  atual_master_live
+
+
+USE [Garware]
+GO
+
+/****** Object:  Table [dbo].[atual_master_live]    Script Date: 23-08-2024 11:50:22 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[atual_master_live](
+	[sr_no] [int] IDENTITY(1,1) NOT NULL,
+	[line_no] [int] NULL,
+	[machine_no] [int] NULL,
+	[shift_start] [datetime] NULL,
+	[shift_end] [datetime] NULL,
+	[shift_no] [int] NULL,
+	[actual_date] [datetime] NULL,
+	[live_count] [int] NULL,
+	[final_live_count] [float] NULL,
+	[construction] [varchar](50) NULL,
+	[run_time] [float] NULL,
+	[esp] [int] NULL,
+	[actual_machine_no] [int] NULL,
+	[target] [decimal](18, 2) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[sr_no] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
+
+########  master_construction_details
+
+
+
+USE [Garware]
+GO
+
+/****** Object:  Table [dbo].[master_construction_details]    Script Date: 23-08-2024 11:51:55 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[master_construction_details](
+	[sr_no] [int] IDENTITY(1,1) NOT NULL,
+	[construction_name] [nvarchar](50) NULL,
+	[meter_per_kg] [float] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[sr_no] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
+
+
+###########################   master_set_machine_target
+
+
+
+USE [Garware]
+GO
+
+/****** Object:  Table [dbo].[master_set_machine_target]    Script Date: 23-08-2024 11:52:40 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[master_set_machine_target](
+	[sr_no] [int] IDENTITY(1,1) NOT NULL,
+	[line_no] [varchar](50) NOT NULL,
+	[machine_no] [varchar](50) NOT NULL,
+	[pulley_diameter] [float] NOT NULL,
+	[entry_date] [date] NOT NULL,
+	[Target_in_mtr] [int] NOT NULL,
+	[rpm] [int] NOT NULL,
+	[calculate_in_mtr] [decimal](10, 2) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[sr_no] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
+
+
+#############[master_set_production]    
+
+USE [Garware]
+GO
+
+/****** Object:  Table [dbo].[master_set_production]    Script Date: 23-08-2024 11:58:59 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[master_set_production](
+	[sr_no] [int] IDENTITY(1,1) NOT NULL,
+	[line_no] [int] NOT NULL,
+	[machine_no] [varchar](50) NOT NULL,
+	[construction] [varchar](50) NOT NULL,
+	[start_time] [datetime2](7) NOT NULL,
+	[end_time] [datetime2](7) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[sr_no] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
+#############[master_update_production]    
+USE [Garware]
+GO
+
+/****** Object:  Table [dbo].[master_update_production]    Script Date: 23-08-2024 12:00:26 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[master_update_production](
+	[sr_no] [int] IDENTITY(1,1) NOT NULL,
+	[line_no] [int] NOT NULL,
+	[machine_no] [varchar](50) NOT NULL,
+	[construction] [varchar](50) NOT NULL,
+	[start_time] [datetime2](7) NOT NULL,
+	[end_time] [datetime2](7) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[sr_no] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+#############[mater_line_machine_esp]
+USE [Garware]
+GO
+
+/****** Object:  Table [dbo].[mater_line_machine_esp]    Script Date: 23-08-2024 12:01:25 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[mater_line_machine_esp](
+	[sr_no] [int] IDENTITY(1,1) NOT NULL,
+	[line_number] [varchar](50) NOT NULL,
+	[machine_number] [varchar](50) NOT NULL,
+	[esp_no] [int] NOT NULL,
+	[actual_machine_no] [int] NULL,
+	[status] [varchar](50) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[sr_no] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+#############[account]
+
+USE [Garware]
+GO
+
+/****** Object:  Table [dbo].[account]    Script Date: 23-08-2024 12:02:24 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[account](
+	[username] [varchar](max) NULL,
+	[email] [varchar](max) NULL,
+	[password] [varchar](max) NULL
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+
+#############[master_machine_status]
+USE [Garware]
+GO
+
+/****** Object:  Table [dbo].[master_machine_status]    Script Date: 23-08-2024 12:03:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[master_machine_status](
+	[Sr_No] [int] IDENTITY(1,1) NOT NULL,
+	[line_number] [int] NOT NULL,
+	[machine_number] [int] NOT NULL,
+	[status] [varchar](10) NOT NULL,
+	[update_status_time] [datetime2](7) NULL,
+	[esp_no] [int] NULL,
+	[actual_machine_no] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Sr_No] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+#############[set_holiday_master]
+
+USE [Garware]
+GO
+
+/****** Object:  Table [dbo].[set_holiday_master]    Script Date: 23-08-2024 12:04:05 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[set_holiday_master](
+	[holiday_id] [int] IDENTITY(1,1) NOT NULL,
+	[title] [nvarchar](255) NULL,
+	[start] [datetime] NULL,
+	[end] [datetime] NULL,
+	[color] [nvarchar](50) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[holiday_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
+
+#############[set_production_events]
+
+USE [Garware]
+GO
+
+/****** Object:  Table [dbo].[set_production_events]    Script Date: 23-08-2024 12:05:11 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[set_production_events](
+	[event_id] [int] IDENTITY(1,1) NOT NULL,
+	[title] [nvarchar](255) NULL,
+	[start] [datetime] NULL,
+	[end] [datetime] NULL,
+	[color] [nvarchar](50) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[event_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+#############[shift_master]
+
+USE [Garware]
+GO
+
+/****** Object:  Table [dbo].[shift_master]    Script Date: 23-08-2024 12:05:54 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[shift_master](
+	[sr_no] [int] IDENTITY(1,1) NOT NULL,
+	[starttime] [nvarchar](50) NULL,
+	[endtime] [nvarchar](50) NULL,
+	[shift_no] [nvarchar](50) NULL,
+	[lunch_time] [int] NULL,
+	[tea_time] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[sr_no] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
+
+
+
+
+
+
+

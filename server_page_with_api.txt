@@ -1,0 +1,19 @@
+server.js   3001
+api/data   
+
+server_runhrs_api.js   9001
+/api/run_hrs_all_line_shift
+/api/run_hrs_One_line_shift
+/api/run_hrs_all_plant_wholeDay
+/api/run_hrs_Line_machine_wholeDay
+
+
+server_oee_api.js    9003
+/api/calculateOEELine_machine
+/api/calculateOEELineWise
+/api/calculateOEEAllPlant
+
+server_master_api.js  9002
+/api/updateConstruction
+/api/calculate_target_mtr
+/api/construction_length_counters

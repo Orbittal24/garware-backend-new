@@ -2,10 +2,8 @@ const express = require('express');
 var sql = require('mssql');
 const bodyParser = require('body-parser');
 const axios = require('axios');
-// const sql = require('mssql');
 const cors = require('cors');
 const { format } = require('date-fns');
-// const { sql, poolPromise } = require('./config');
 const app = express();
 const port = 3001; // Choose any available port
 
@@ -49,12 +47,6 @@ const dbConfig = {
 
 
 
-// Fnction  to  get  column name  L1M1
-// Dynamic Column name, [Line_Machine_Pulse_Count1]
-function getMachineColumn(Esp,machineId) {
-  return `L1E${Esp}M${machineId}`;
-}
-
 
 // Main array for Actual Run Time
 const previousPulseCounts = {}; // { machineId: { pulseCount: number, startTime: Date } }
@@ -83,9 +75,20 @@ const pool = await sql.connect(dbConfig)
           let machinesDataArray;
           if (Array.isArray(machinesData)) {
               machinesDataArray = machinesData;
-          } else if (typeof machinesData === 'object' && machinesData !== null) {
-              machinesDataArray = [machinesData];
-          } else {
+          } else if (Array.isArray(machinesData.data) && machinesData.timestamp) {
+            // Case where requestData has an array `data` and a `timestamp`
+            const { data, timestamp } = machinesData;
+    
+            console.log('Processing:', data, 'with timestamp:', timestamp);
+    
+            // Now data is an array, loop through it
+            machinesDataArray = data.map(item => ({
+                Esp: item.Esp,
+                machineId: item.machineId,
+                machinePulseCount: item.machinePulseCount
+            }));
+    
+        }else {
               throw new Error('Invalid machinesData format');
           }
 
@@ -93,6 +96,11 @@ const pool = await sql.connect(dbConfig)
               const machineId = machine.machineId;
               const machinePulseCount = machine.machinePulseCount;
               const Esp = machine.Esp;
+              const timestamp = machine.timestamp; // Retrieve the timestamp
+
+
+              console.log('dataaaaaaaaaaaaaaaaaaaaa',machineId ,machinePulseCount);
+              
               // const Line = machine.Line;
 
 
@@ -268,6 +276,43 @@ const { calculate_in_mtr } = targetResult.recordset[0];
 
 console.log('Target Result2:', targetResult.recordset);
 
+
+//  target   
+
+const shiftnoResult = await pool.request()
+.query(`
+  SELECT COUNT(shift_no) AS sr_no
+  FROM [Garware].[dbo].[shift_master]
+`);
+const shifts = shiftnoResult.recordset[0].sr_no;
+
+console.log('shifts:', shifts);
+
+
+console.log("line",Line)
+
+console.log("machine_no",machineId)
+const target = await pool.request()
+.input('machine_no', sql.Int, actual_machine_no)
+.input('line_no', sql.Int, Line)
+.query(`
+SELECT 
+Target_in_mtr
+FROM [Garware].[dbo].[master_set_machine_target]
+WHERE line_no = @line_no AND machine_no = @machine_no
+`);
+const total_target = target.recordset[0].Target_in_mtr;
+
+
+
+const current_shift_target = total_target / shifts
+console.log("current_shift_target: ",current_shift_target)
+
+
+
+
+
+
   const actualResult = await pool.request()
     .input('machine_no', sql.Int, actual_machine_no)
     .input('line_no', sql.VarChar, Line)
@@ -338,10 +383,11 @@ console.log("Esp: ",Esp)
         .input('run_time', sql.Float, 0) // Adjust as needed
         .input('shift_no', sql.Int, currentShift.shift_no)
         .input('actual_machine_no', sql.Int, actual_machine_no)
+        .input('current_shift_target', sql.Float, current_shift_target)
         .query(`INSERT INTO [Garware].[dbo].[atual_master_live] 
-                (machine_no, line_no, shift_start, shift_end, actual_date, live_count, final_live_count, construction, run_time, shift_no, esp, actual_machine_no) 
+                (machine_no, line_no, shift_start, shift_end, actual_date, live_count, final_live_count, construction, run_time, shift_no, esp, actual_machine_no,target) 
                 VALUES 
-                (@machine_no, @line_no, @shift_start, @shift_end, @actual_date, @live_count, @final_live_count, @construction, @run_time, @shift_no, @Esp, @actual_machine_no)`);
+                (@machine_no, @line_no, @shift_start, @shift_end, @actual_date, @live_count, @final_live_count, @construction, @run_time, @shift_no, @Esp, @actual_machine_no,@current_shift_target)`);
     
           
 console.log('Inserted  successfully   after  ')
@@ -512,10 +558,11 @@ previousPulseData.pulseCount = machinePulseCount;
       .input('run_time', sql.Float, 0) // Adjust as needed
       .input('shift_no', sql.Int, currentShift.shift_no)
       .input('actual_machine_no', sql.Int, actual_machine_no)
+      .input('current_shift_target', sql.Float, current_shift_target)
       .query(`INSERT INTO [Garware].[dbo].[atual_master_live] 
-              (machine_no, line_no, shift_start, shift_end, actual_date, live_count, final_live_count, construction, run_time, shift_no, esp, actual_machine_no) 
+              (machine_no, line_no, shift_start, shift_end, actual_date, live_count, final_live_count, construction, run_time, shift_no, esp, actual_machine_no,target) 
               VALUES 
-              (@machine_no, @line_no, @shift_start, @shift_end, @actual_date, @live_count, @final_live_count, @construction, @run_time, @shift_no, @Esp, @actual_machine_no)`);
+              (@machine_no, @line_no, @shift_start, @shift_end, @actual_date, @live_count, @final_live_count, @construction, @run_time, @shift_no, @Esp, @actual_machine_no,@current_shift_target)`);
   }   //normal insert
 
 
@@ -539,35 +586,35 @@ previousPulseData.pulseCount = machinePulseCount;
   
  
 
+// thursday
+//   const shiftnoResult = await pool.request()
+//       .query(`
+//         SELECT COUNT(sr_no) AS sr_no
+//         FROM [Garware].[dbo].[shift_master]
+//       `);
+// const shifts = shiftnoResult.recordset[0].sr_no;
 
-  const shiftnoResult = await pool.request()
-      .query(`
-        SELECT COUNT(sr_no) AS sr_no
-        FROM [Garware].[dbo].[shift_master]
-      `);
-const shifts = shiftnoResult.recordset[0].sr_no;
-
-console.log('shifts:', shifts);
-
-
-console.log("line",Line)
-
-console.log("machine_no",machineId)
-const target = await pool.request()
-  .input('machine_no', sql.Int, actual_machine_no)
-  .input('line_no', sql.Int, Line)
-  .query(`
-    SELECT 
-      Target_in_mtr
-    FROM [Garware].[dbo].[master_set_machine_target]
-    WHERE line_no = @line_no AND machine_no = @machine_no
-  `);
-  const total_target = target.recordset[0].Target_in_mtr;
+// console.log('shifts:', shifts);
 
 
+// console.log("line",Line)
 
-  const current_shift_target = total_target / shifts
-  console.log("current_shift_target: ",current_shift_target)
+// console.log("machine_no",machineId)
+// const target = await pool.request()
+//   .input('machine_no', sql.Int, actual_machine_no)
+//   .input('line_no', sql.Int, Line)
+//   .query(`
+//     SELECT 
+//       Target_in_mtr
+//     FROM [Garware].[dbo].[master_set_machine_target]
+//     WHERE line_no = @line_no AND machine_no = @machine_no
+//   `);
+//   const total_target = target.recordset[0].Target_in_mtr;
+
+
+
+//   const current_shift_target = total_target / shifts
+//   console.log("current_shift_target: ",current_shift_target)
   console.log('Shift Start Date Formatted:', shiftStartDateISO);
   console.log('Shift End Date Formatted:', shiftEndDateISO);
 
@@ -594,7 +641,9 @@ const target = await pool.request()
                   if (current_shift_target > 0) {
                       const actual = checklivecountmtr.recordset[0];
                       if (actual.total_final_live_count >= current_shift_target) {
-                          messages.push(`Target for machine ${machineId} is completed in shift ${currentShift.shift_no}, Line: ${Line}, ESP: ${Esp}.`);
+                          // messages.push(`Target for machine ${machineId} is completed in shift ${currentShift.shift_no}, Line: ${Line}, ESP: ${Esp}.`);
+                          messages.push(`Target for machine ${machineId} is completed`);
+
                         //   const messages = [
                         //     `Target for machine ${machineId} is completed in shift ${currentShift.shift_no}, Line: ${Line}, ESP: ${Esp}.`
                         // ];
@@ -604,7 +653,11 @@ const target = await pool.request()
                         
               }
           }
-      } else {
+     
+     
+     
+     
+        } else {
                   console.log(`No matching plan found for Machine ID: ${machineId} and Line: ${Line}`);
                   // await pool.rollback();
                   return res.status(400).json({ message: 'No matching plan found.' });
@@ -625,59 +678,135 @@ const target = await pool.request()
       // sql.close();
   }
 });
-          
+    
 
-// for update construction if changed
+// backup of update construction
+// app.post('/api/updateConstruction', async (req, res) => {
+//   const { line_no, machine_no, construction, start_time, end_time } = req.body;
+//   console.log("data received:", line_no, machine_no, construction, start_time, end_time)
+
+//   if (!line_no || !machine_no || !construction || !start_time || !end_time) {
+//     return res.status(400).send('Missing required fields');
+//   }
+
+//   try {
+
+//     await sql.connect(dbConfig);
+
+//     const request = new sql.Request();
+
+//     const query = `
+//       UPDATE [Garware].[dbo].[atual_master_live]
+//       SET construction = @construction
+//       WHERE actual_machine_no = @machine_no AND
+//       line_no = @line_no AND
+//       actual_date BETWEEN @start_time AND @end_time
+//        ;
+//     `;
+
+//     request.input('line_no', sql.Int, line_no);
+//     request.input('machine_no', sql.Int, machine_no);
+//     request.input('construction', sql.NVarChar, construction);
+//     request.input('start_time', sql.DateTime2, start_time);
+//     request.input('end_time', sql.DateTime2, end_time);
+
+//     const result = await request.query(query);
+//     console.log("update result:", result)
+
+
+//      // Insert the received data into the master_update_production table
+//      const insertQuery = `
+//      INSERT INTO [Garware].[dbo].[master_update_production] 
+//      (line_no, machine_no, construction, start_time, end_time)
+//      VALUES (@line_no, @machine_no, @construction, @start_time, @end_time);
+//    `;
+
+//    const insertResult = await request.query(insertQuery);
+//    console.log("Insert result:", insertResult);
+
+
+//     res.status(200).send('Update successful');
+//   } catch (err) {
+//     console.error('Error executing query: ', err);
+//     res.status(500).send('Internal Server Error');
+//   }
+// });
+
 app.post('/api/updateConstruction', async (req, res) => {
-  const { line_no, machine_no, construction, start_time, end_time } = req.body;
-  console.log("data received:", line_no, machine_no, construction, start_time, end_time)
+  console.log('Request body:', req.body); // Log the entire request body for debugging
 
-  if (!line_no || !machine_no || !construction || !start_time || !end_time) {
-    return res.status(400).send('Missing required fields');
+  const entries = req.body;
+
+  if (!Array.isArray(entries) || entries.length === 0) {
+    return res.status(400).send('Entries should be a non-empty array');
   }
 
   try {
-
     await sql.connect(dbConfig);
 
-    const request = new sql.Request();
+    const transaction = new sql.Transaction();
 
-    const query = `
-      UPDATE [Garware].[dbo].[atual_master_live]
-      SET construction = @construction
-      WHERE actual_machine_no = @machine_no AND
-      line_no = @line_no AND
-      actual_date BETWEEN @start_time AND @end_time
-       ;
-    `;
+    try {
+      await transaction.begin();
 
-    request.input('line_no', sql.Int, line_no);
-    request.input('machine_no', sql.Int, machine_no);
-    request.input('construction', sql.NVarChar, construction);
-    request.input('start_time', sql.DateTime2, start_time);
-    request.input('end_time', sql.DateTime2, end_time);
+      for (const entry of entries) {
+        const { line_no, machine_no, construction, start_time, end_time } = entry;
+        console.log("data received:", line_no, machine_no, construction, start_time, end_time); // Log each entry for debugging
 
-    const result = await request.query(query);
-    console.log("update result:", result)
+        if (!line_no || !machine_no || !construction || !start_time || !end_time) {
+          throw new Error('Missing required fields');
+        }
 
+        const request = new sql.Request(transaction);
 
-     // Insert the received data into the master_update_production table
-     const insertQuery = `
-     INSERT INTO [Garware].[dbo].[master_update_production] 
-     (line_no, machine_no, construction, start_time, end_time)
-     VALUES (@line_no, @machine_no, @construction, @start_time, @end_time);
-   `;
+        // Update the `atual_master_live` table
+        const updateQuery = `
+          UPDATE [Garware].[dbo].[atual_master_live]
+          SET construction = @construction
+          WHERE actual_machine_no = @machine_no AND
+          line_no = @line_no AND
+          actual_date BETWEEN @start_time AND @end_time;
+        `;
 
-   const insertResult = await request.query(insertQuery);
-   console.log("Insert result:", insertResult);
+        await request.input('line_no', sql.Int, line_no);
+        await request.input('machine_no', sql.Int, machine_no);
+        await request.input('construction', sql.NVarChar, construction);
+        await request.input('start_time', sql.DateTime2, start_time);
+        await request.input('end_time', sql.DateTime2, end_time);
+        await request.query(updateQuery);
 
+        // Insert the received data into the `master_update_production` table
+        const insertQuery = `
+          INSERT INTO [Garware].[dbo].[master_update_production] 
+          (line_no, machine_no, construction, start_time, end_time)
+          VALUES (@line_no, @machine_no, @construction, @start_time, @end_time);
+        `;
 
-    res.status(200).send('Update successful');
+        await request.query(insertQuery);
+      }
+
+      await transaction.commit();
+      res.status(200).send('Update and insert successful');
+    } catch (err) {
+      await transaction.rollback();
+      console.error('Error during transaction:', err);
+      res.status(500).send('Transaction failed');
+    }
   } catch (err) {
-    console.error('Error executing query: ', err);
-    res.status(500).send('Internal Server Error');
+    console.error('SQL connection error:', err);
+    res.status(500).send('SQL connection error');
   }
 });
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -766,426 +895,260 @@ app.post('/api/calculate_target_mtr', async (req, res) => {
 });
 
 
-// LENGTH COUNTERS (How Many Threads Generate in Mtr/KG)
-// calculate length counters for machine
-app.post('/api/length_counters', async (req, res) => {
-  const { Line, machine, actualDate } = req.body;
-
-  console.log('Received request body:', req.body);
-
-  try {
-    // Connect to the database
-    const pool = await sql.connect(dbConfig);
 
 
-    let query;
-    let request = await pool.request()
-      .input('Line', sql.Int, Line)
-      .input('actualDate', sql.Date, actualDate);
 
-    if (machine === 'all') {
-      query = `
-        SELECT actual_machine_no, SUM(final_live_count) AS totalLiveCount
-        FROM [Garware].[dbo].[atual_master_live]
-        WHERE line_no = @Line AND CONVERT(date, actual_date) = @actualDate
-        GROUP BY actual_machine_no
-      `;
-    } else {
-      query = `
-        SELECT SUM(final_live_count) AS totalLiveCount
-        FROM [Garware].[dbo].[atual_master_live]
-        WHERE line_no = @Line AND actual_machine_no = @machine AND CONVERT(date, actual_date) = @actualDate
-      `;
-      request = request.input('machine', sql.Int, machine);
-    }
-
-    const result = await request.query(query);
-
-    if (result.recordset.length === 0) {
-      res.status(404).json({ message: 'No data found for the given criteria.' });
-      return;
-    }
-
-    res.status(200).json({ message: 'Data retrieved successfully.', result: result.recordset });
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
-  } finally {
-    // Close database connection
-    // await sql.close();
-  }
-});
-
-// calculate lengeth counters for construction
+// using array  
 app.post('/api/construction_length_counters', async (req, res) => {
-  const { construction, actualDate } = req.body;
+  const entries = req.body;
 
   console.log('Received request body:', req.body);
 
+  if (!Array.isArray(entries) || entries.length === 0) {
+    return res.status(400).json({ message: 'Request body should be a non-empty array' });
+  }
+
   try {
-    // Connect to the database
     const pool = await sql.connect(dbConfig);
 
-    let query1 = `
-      SELECT meter_per_kg 
-      FROM [Garware].[dbo].[master_construction_details]
-      WHERE construction_name = @construction 
-    `;
-    const request1 = await pool.request()
-    .input('construction', sql.VarChar, construction)
-    const result1 = await request1.query(query1);
-     const mtr_kg = result1.recordset[0].meter_per_kg
-    console.log("mtr_kg:", mtr_kg)
+    const results = [];
 
+    for (const entry of entries) {
+      const { construction, actualDate } = entry;
 
-    let query = `
-      SELECT SUM(final_live_count) AS totalLiveCount
-      FROM [Garware].[dbo].[atual_master_live]
-      WHERE construction = @construction AND CONVERT(date, actual_date) = @actualDate
-    `;
+      if (!construction || !actualDate) {
+        return res.status(400).json({ message: 'Missing required fields in one of the entries' });
+      }
 
-    const request = await pool.request()
-      .input('construction', sql.VarChar, construction)
-      .input('actualDate', sql.Date, actualDate);
+      // Query to get meter per kg
+      const query1 = `
+        SELECT meter_per_kg 
+        FROM [Garware].[dbo].[master_construction_details]
+        WHERE construction_name = @construction 
+      `;
+      const request1 = pool.request()
+        .input('construction', sql.VarChar, construction);
+      
+      const result1 = await request1.query(query1);
+      
+      if (result1.recordset.length === 0) {
+        results.push({ construction, actualDate, error: 'Construction details not found' });
+        continue; // Skip to the next entry
+      }
 
-    const result = await request.query(query);
-    const mtr = result.recordset[0].totalLiveCount
-    console.log("mtr:", mtr)
+      const mtr_kg = result1.recordset[0].meter_per_kg;
 
-    const kg = mtr_kg / mtr
-    console.log("kg: ", kg)
-    if (result.recordset.length === 0) {
-      res.status(404).json({ message: 'No data found for the given criteria.' });
-      return;
+      console.log("mtr_kg:", mtr_kg);
+
+      // Query to get total live count
+      const query = `
+        SELECT SUM(final_live_count) AS totalLiveCount
+        FROM [Garware].[dbo].[atual_master_live]
+        WHERE construction = @construction AND CONVERT(date, actual_date) = @actualDate
+      `;
+      const request = pool.request()
+        .input('construction', sql.VarChar, construction)
+        .input('actualDate', sql.Date, actualDate);
+      
+      const result = await request.query(query);
+
+      if (result.recordset.length === 0 || result.recordset[0].totalLiveCount === null) {
+        results.push({ construction, actualDate, error: 'No data found for the given criteria' });
+        continue; // Skip to the next entry
+      }
+
+      const mtr = result.recordset[0].totalLiveCount;
+      console.log("mtr:", mtr);
+
+      // Ensure mtr_kg and mtr are valid numbers before dividing
+      if (mtr === 0) {
+        results.push({ construction, actualDate, error: 'Total live count is zero, cannot perform division' });
+        continue; // Skip to the next entry
+      }
+
+      const kg = mtr_kg / mtr;
+      console.log("kg:", kg);
+
+      // Format mtr and kg
+      const mtrFormatted = mtr.toFixed(2);
+      const kgFormatted = kg.toFixed(2);
+
+      results.push({ 
+        construction, 
+        actualDate, 
+        mtr: parseFloat(mtrFormatted), 
+        kg: parseFloat(kgFormatted) 
+      });
     }
 
-    const mtrFormatted = mtr.toFixed(2);
-    const kgFormatted = kg.toFixed(2);
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'No valid data found' });
+    }
 
     res.status(200).json({ 
-      message: 'Data retrieved successfully for construction', 
-      mtr: parseFloat(mtrFormatted), 
-      kg: parseFloat(kgFormatted) 
+      message: 'Data retrieved successfully for constructions', 
+      results 
     });
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   } finally {
     // Close database connection
-    // await sql.close();
+    await sql.close();
   }
 });
 
 
-// RUN - HOURS api's
-// for calculate run hrs all plant (Line Wise) (Shift Wise) 
+
+
+
+
+
+
+
+
+// run hrs all line by shift wise  || target || latest construction || actual live count mtr wise (length counters)
 app.post('/api/run_hrs_all_line_shift', async (req, res) => {
-  const { date } = req.body;
-  
-  console.log('Received request body:', req.body);
-  
+  const dates = req.body; // Expecting an array of dates
 
-  
+  console.log('Received request body:', req.body);
+
+  if (!Array.isArray(dates) || dates.length === 0) {
+    return res.status(400).json({ message: 'Request body should be a non-empty array' });
+  }
+
   try {
     // Connect to the database
     const pool = await sql.connect(dbConfig);
 
-// Capture the current local time
-// Get current date and time in local timezone (IST)
-const now = new Date();
-const localTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    // Capture the current local time
+    const now = new Date();
+    const currentHours = String(now.getHours()).padStart(2, '0');
+    const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+    const currentSeconds = String(now.getSeconds()).padStart(2, '0');
+    const currentTimeString = `${currentHours}:${currentMinutes}:${currentSeconds}`;
+    const currentDateString = now.toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
 
-// Convert local time to ISO 8601 format (UTC)
-const localTimeISO = localTime.toISOString();
+    const results = [];
 
-console.log("Current Local Time in ISO Format (IST):", localTimeISO);
+    for (const date of dates) {
+      const dateString = new Date(date);
+      const dateISO = dateString.toISOString().split('T')[0]; // Convert date to YYYY-MM-DD format
 
-// Adjust for IST manually by adding 5 hours and 30 minutes
-const istOffset = 5 * 60 * 60 * 1000 + 30 * 60 * 1000; // 5 hours 30 minutes in milliseconds
-const adjustedLocalTime = new Date(localTime.getTime() + istOffset);
-const adjustedLocalTimeISO = adjustedLocalTime.toISOString();
+      const result = await pool.request()
+        .query(`SELECT * FROM [Garware].[dbo].[shift_master]`);
+      const shifts = result.recordset;
 
-    // Get current date and time in local timezone (IST)
-const currentHours = String(now.getHours()).padStart(2, '0');
-const currentMinutes = String(now.getMinutes()).padStart(2, '0');
-const currentSeconds = String(now.getSeconds()).padStart(2, '0');
-const currentTimeString = `${currentHours}:${currentMinutes}:${currentSeconds}`;
-console.log("Current Time:", currentTimeString);
+      let currentShift = null;
 
-const currentDateString = now.toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
-console.log("Current Date:", currentDateString);
+      shifts.forEach(shift => {
+        const startTime = shift.starttime; // Assuming shift.starttime is in "HH:MM:SS" format
+        const endTime = shift.endtime; // Assuming shift.endtime is in "HH:MM:SS" format
 
-const result = await pool.request()
-.query(`SELECT * FROM [Garware].[dbo].[shift_master]`);
-const shifts = result.recordset;
+        if (endTime < startTime) { // Shift spans midnight
+          if (currentTimeString >= startTime || currentTimeString <= endTime) {
+            currentShift = shift;
+          }
+        } else { // Regular shift
+          if (currentTimeString >= startTime && currentTimeString <= endTime) {
+            currentShift = shift;
+          }
+        }
+      });
 
-let currentShift = null;
+      if (currentShift) {
+        // Determine the correct start and end datetimes for the current shift
+        let shiftStartDate = new Date(dateString);
+        let shiftEndDate = new Date(dateString);
 
-shifts.forEach(shift => {
-  const startTime = shift.starttime; // Assuming shift.starttime is in "HH:MM:SS" format
-  const endTime = shift.endtime; // Assuming shift.endtime is in "HH:MM:SS" format
-  console.log("Start Time:", startTime);
-  console.log("End Time:", endTime);
+        const [startHours, startMinutes, startSeconds] = currentShift.starttime.split(':').map(Number);
+        const [endHours, endMinutes, endSeconds] = currentShift.endtime.split(':').map(Number);
 
-  if (endTime < startTime) { // Shift spans midnight
-    if (currentTimeString >= startTime || currentTimeString <= endTime) {
-      currentShift = shift;
+        shiftStartDate.setHours(startHours, startMinutes, startSeconds);
+        shiftEndDate.setHours(endHours, endMinutes, endSeconds);
+
+        if (endHours < startHours) {
+          // Shift spans midnight
+          if (now.getHours() < startHours) {
+            shiftStartDate.setDate(shiftStartDate.getDate() - 1);
+          } else {
+            shiftEndDate.setDate(shiftEndDate.getDate() + 1);
+          }
+        }
+
+        const formatDate = (date) => {
+          const [day, month, year] = [date.getDate(), date.getMonth() + 1, date.getFullYear()];
+          const [hours, minutes, seconds] = [date.getHours(), date.getMinutes(), date.getSeconds()];
+          return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.000Z`;
+        };
+
+        const shiftStartDateISO = formatDate(shiftStartDate);
+        const shiftEndDateISO = formatDate(shiftEndDate);
+
+        const liveCountData = await pool.request()
+          .input('date1', sql.DateTime, shiftStartDateISO)
+          .input('date2', sql.DateTime, shiftEndDateISO)
+          .query(`
+            SELECT line_no, SUM(run_time) AS totalrun_time
+            FROM [Garware].[dbo].[atual_master_live]
+            WHERE shift_start >= @date1 
+              AND shift_end <= @date2
+            GROUP BY line_no
+          `);
+
+        const totalrun_time = liveCountData.recordset.map(record => {
+          const runTimeInSeconds = record.totalrun_time;
+
+          // Convert seconds to minutes
+          const runTimeInMinutes = typeof runTimeInSeconds === 'number' && !isNaN(runTimeInSeconds)
+            ? Math.floor(runTimeInSeconds / 60)
+            : 0;
+
+          // Convert minutes to hours
+          const runTimeInHours = runTimeInMinutes / 60;
+          
+          return {
+            ...record,
+            run_time_minutes: runTimeInMinutes,
+            run_time_hours: runTimeInHours.toFixed(2)
+          };
+        });
+
+        results.push({ 
+          date: dateString, 
+          shiftStartDate: shiftStartDateISO, 
+          shiftEndDate: shiftEndDateISO, 
+          totalrun_time 
+        });
+      } else {
+        results.push({ 
+          date: dateString, 
+          error: 'No current shift found for the given date and time' 
+        });
+      }
     }
-  } else { // Regular shift
-    if (currentTimeString >= startTime && currentTimeString <= endTime) {
-      currentShift = shift;
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'No valid data found' });
     }
-  }
-});
-// console.log("currentShift: ",currentShift)
-
-if (currentShift) {
-  console.log('Current Shift:', currentShift);
-
-  // Determine the correct start and end datetimes for the current shift
-  let shiftStartDate = new Date(now);
-  let shiftEndDate = new Date(now);
-
-  const [startHours, startMinutes, startSeconds] = currentShift.starttime.split(':').map(Number);
-  const [endHours, endMinutes, endSeconds] = currentShift.endtime.split(':').map(Number);
-
-  shiftStartDate.setHours(startHours, startMinutes, startSeconds);
-  shiftEndDate.setHours(endHours, endMinutes, endSeconds);
-
-  if (endHours < startHours) {
-    // Shift spans midnight
-    if (now.getHours() < startHours) {
-      shiftStartDate.setDate(shiftStartDate.getDate() - 1);
-    } else {
-      shiftEndDate.setDate(shiftEndDate.getDate() + 1);
-    }
-  }
-
-  const formatDate = (date) => {
-    const [day, month, year] = [date.getDate(), date.getMonth() + 1, date.getFullYear()];
-    const [hours, minutes, seconds] = [date.getHours(), date.getMinutes(), date.getSeconds()];
-    return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.000Z`;
-  };
-
-  const shiftStartDateISO = formatDate(shiftStartDate);
-  const shiftEndDateISO = formatDate(shiftEndDate);
-
-  console.log('Shift Start Date Formatted:', shiftStartDateISO);
-  console.log('Shift End Date Formatted:', shiftEndDateISO);
-
-  const liveCountData = await pool.request()
-      
-      .input('date1', sql.DateTime, shiftStartDateISO)
-      .input('date2', sql.DateTime, shiftEndDateISO)
-      .query(`
-        SELECT line_no, SUM(run_time) AS totalrun_time
-        FROM [Garware].[dbo].[atual_master_live]
-        WHERE  shift_start >= @date1 
-        AND shift_end <= @date2
-                GROUP BY line_no
-      `);
-
-    if (liveCountData.recordset.length === 0) {
-      res.status(404).json({ message: 'No live count data found for the given date range and line.' });
-      return;
-    }
-
-//     const totalrun_time = liveCountData.recordset;
-// console.log("totalrun_time:", totalrun_time)
-
-const totalrun_time = liveCountData.recordset.map(record => {
-  const runTimeInSeconds = record.totalrun_time;
-
-  // Convert seconds to minutes
-  const runTimeInMinutes = typeof runTimeInSeconds === 'number' && !isNaN(runTimeInSeconds)
-    ? Math.floor(runTimeInSeconds / 60)
-    : 0;
-
-  // Convert minutes to hours
-  const runTimeInHours = runTimeInMinutes / 60;
-  
-  return {
-    ...record,
-    run_time_minutes: runTimeInMinutes,
-    run_time_hours: runTimeInHours.toFixed(2)
-  };
-});
-
-console.log("totalrun_time in minutes and hours:", totalrun_time);
 
     res.status(200).json({ 
-      message: 'RUN HRS. | all plant (Line Wise) (Shift Wise) ',
-      totalrun_time
+      message: 'RUN HRS. | all plant (Line Wise) (Shift Wise)',
+      results 
     });
-  }
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   } finally {
     // Close database connection
-    // await sql.close();
+    //await sql.close();
   }
 });
 
-// for calculate run hrs Line-Machine (Line Machine Wise) (Shift Wise) 
+
+// run hrs one by one line by shift - machine wise
 app.post('/api/run_hrs_One_line_shift', async (req, res) => {
-  const { date, Line } = req.body;
-  
-  console.log('Received request body:', req.body);
-  
-
-  
-  try {
-    // Connect to the database
-    const pool = await sql.connect(dbConfig);
-
-// Capture the current local time
-// Get current date and time in local timezone (IST)
-const now = new Date();
-const localTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
-
-// Convert local time to ISO 8601 format (UTC)
-const localTimeISO = localTime.toISOString();
-
-console.log("Current Local Time in ISO Format (IST):", localTimeISO);
-
-// Adjust for IST manually by adding 5 hours and 30 minutes
-const istOffset = 5 * 60 * 60 * 1000 + 30 * 60 * 1000; // 5 hours 30 minutes in milliseconds
-const adjustedLocalTime = new Date(localTime.getTime() + istOffset);
-const adjustedLocalTimeISO = adjustedLocalTime.toISOString();
-
-    // Get current date and time in local timezone (IST)
-const currentHours = String(now.getHours()).padStart(2, '0');
-const currentMinutes = String(now.getMinutes()).padStart(2, '0');
-const currentSeconds = String(now.getSeconds()).padStart(2, '0');
-const currentTimeString = `${currentHours}:${currentMinutes}:${currentSeconds}`;
-console.log("Current Time:", currentTimeString);
-
-const currentDateString = now.toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
-console.log("Current Date:", currentDateString);
-
-const result = await pool.request()
-.query(`SELECT * FROM [Garware].[dbo].[shift_master]`);
-const shifts = result.recordset;
-
-let currentShift = null;
-
-shifts.forEach(shift => {
-  const startTime = shift.starttime; // Assuming shift.starttime is in "HH:MM:SS" format
-  const endTime = shift.endtime; // Assuming shift.endtime is in "HH:MM:SS" format
-  console.log("Start Time:", startTime);
-  console.log("End Time:", endTime);
-
-  if (endTime < startTime) { // Shift spans midnight
-    if (currentTimeString >= startTime || currentTimeString <= endTime) {
-      currentShift = shift;
-    }
-  } else { // Regular shift
-    if (currentTimeString >= startTime && currentTimeString <= endTime) {
-      currentShift = shift;
-    }
-  }
-});
-// console.log("currentShift: ",currentShift)
-
-if (currentShift) {
-  console.log('Current Shift:', currentShift);
-
-  // Determine the correct start and end datetimes for the current shift
-  let shiftStartDate = new Date(now);
-  let shiftEndDate = new Date(now);
-
-  const [startHours, startMinutes, startSeconds] = currentShift.starttime.split(':').map(Number);
-  const [endHours, endMinutes, endSeconds] = currentShift.endtime.split(':').map(Number);
-
-  shiftStartDate.setHours(startHours, startMinutes, startSeconds);
-  shiftEndDate.setHours(endHours, endMinutes, endSeconds);
-
-  if (endHours < startHours) {
-    // Shift spans midnight
-    if (now.getHours() < startHours) {
-      shiftStartDate.setDate(shiftStartDate.getDate() - 1);
-    } else {
-      shiftEndDate.setDate(shiftEndDate.getDate() + 1);
-    }
-  }
-
-  const formatDate = (date) => {
-    const [day, month, year] = [date.getDate(), date.getMonth() + 1, date.getFullYear()];
-    const [hours, minutes, seconds] = [date.getHours(), date.getMinutes(), date.getSeconds()];
-    return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.000Z`;
-  };
-
-  const shiftStartDateISO = formatDate(shiftStartDate);
-  const shiftEndDateISO = formatDate(shiftEndDate);
-
-  console.log('Shift Start Date Formatted:', shiftStartDateISO);
-  console.log('Shift End Date Formatted:', shiftEndDateISO);
-
-  const liveCountData = await pool.request()
-      
-      .input('date1', sql.DateTime, shiftStartDateISO)
-      .input('date2', sql.DateTime, shiftEndDateISO)
-      .input('Line', sql.Int, Line)
-      .query(`
-        SELECT actual_machine_no, SUM(run_time) AS totalrun_time
-        FROM [Garware].[dbo].[atual_master_live]
-        WHERE  shift_start >= @date1 
-        AND shift_end <= @date2
-                AND line_no = @Line
-                 GROUP BY actual_machine_no
-      `);
-
-    if (liveCountData.recordset.length === 0) {
-      res.status(404).json({ message: 'No live count data found for the given date range and line.' });
-      return;
-    }
-
-//     const totalrun_time = liveCountData.recordset;
-// console.log("totalrun_time:", totalrun_time)
-
-const totalrun_time = liveCountData.recordset.map(record => {
-  const runTimeInSeconds = record.totalrun_time;
-
-  // Convert seconds to minutes
-  const runTimeInMinutes = typeof runTimeInSeconds === 'number' && !isNaN(runTimeInSeconds)
-    ? Math.floor(runTimeInSeconds / 60)
-    : 0;
-
-  // Convert minutes to hours
-  const runTimeInHours = runTimeInMinutes / 60;
-  
-  return {
-    ...record,
-    run_time_minutes: runTimeInMinutes,
-    run_time_hours: runTimeInHours.toFixed(2)
-  };
-});
-
-console.log("totalrun_time in minutes and hours:", totalrun_time);
-
-
-
-
-   
-
-    res.status(200).json({ 
-      message: 'RUN HRS. | Line-Machine (Line Machine Wise Shift Wise)',
-      totalrun_time
-    });
-  }
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
-  } finally {
-    // Close database connection
-    // await sql.close();
-  }
-});
-
-// Endpoint to calculate run hours for all plants (line-wise) for the entire day
-app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
-  const { actualDate } = req.body;
+  const { dataArray } = req.body; // Expecting an array of objects with 'date' and 'Line'
 
   console.log('Received request body:', req.body);
 
@@ -1193,229 +1156,364 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
     // Connect to the database
     const pool = await sql.connect(dbConfig);
 
-    // Fetch the live count data based on the provided date
-    const liveCountData = await pool.request()
-      .input('actualDate', sql.DateTime, actualDate)
-      .query(`
-        SELECT line_no, SUM(run_time) AS totalrun_time
-        FROM [Garware].[dbo].[atual_master_live]
-        WHERE  CONVERT(Date, shift_start) = @actualDate 
-        GROUP BY line_no
-      `);
+    const results = [];
 
-    // Check if any data was found
-    if (liveCountData.recordset.length === 0) {
-      res.status(404).json({ message: 'No live count data found for the given date.' });
-      return;
-    }
+    // Iterate through each item in the dataArray
+    for (const { date, Line } of dataArray) {
+      console.log(`Processing Line: ${Line} for Date: ${date}`);
 
-    // Convert total run time from seconds to minutes and hours
-    const totalrun_time = liveCountData.recordset.map(record => {
-      const runTimeInSeconds = record.totalrun_time;
+      // Capture the current local time
+      const now = new Date();
+      const localTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+      const currentHours = String(now.getHours()).padStart(2, '0');
+      const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+      const currentSeconds = String(now.getSeconds()).padStart(2, '0');
+      const currentTimeString = `${currentHours}:${currentMinutes}:${currentSeconds}`;
+      console.log("Current Time:", currentTimeString);
 
-      // Convert seconds to minutes
-      const runTimeInMinutes = typeof runTimeInSeconds === 'number' && !isNaN(runTimeInSeconds)
-        ? Math.floor(runTimeInSeconds / 60)
-        : 0;
+      const result = await pool.request().query(`SELECT * FROM [Garware].[dbo].[shift_master]`);
+      const shifts = result.recordset;
 
-      // Convert minutes to hours and format to 2 decimal places
-      const runTimeInHours = (runTimeInMinutes / 60).toFixed(2);
-      
-      return {
-        ...record,
-        run_time_minutes: runTimeInMinutes,
-        run_time_hours: runTimeInHours
-      };
-    });
+      let currentShift = null;
 
-    console.log("Total run time in minutes and hours:", totalrun_time);
+      shifts.forEach(shift => {
+        const startTime = shift.starttime;
+        const endTime = shift.endtime;
 
-    // Send the response with the calculated run hours
-    res.status(200).json({ 
-      message: 'RUN HRS. | all plants (line-wise) for the entire day',
-      totalrun_time
-    });
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
-  } finally {
-    // Close the database connection
-    sql.close();
-  }
-});
+        if (endTime < startTime) { // Shift spans midnight
+          if (currentTimeString >= startTime || currentTimeString <= endTime) {
+            currentShift = shift;
+          }
+        } else { // Regular shift
+          if (currentTimeString >= startTime && currentTimeString <= endTime) {
+            currentShift = shift;
+          }
+        }
+      });
 
-// Endpoint to calculate run hours for Line machine (line-machine wise) for the entire day
-app.post('/api/run_hrs_Line_machine_wholeDay', async (req, res) => {
-  const { actualDate, Line } = req.body;
+      if (currentShift) {
+        // Use the provided date from the request body
+        let shiftStartDate = new Date(date);
+        let shiftEndDate = new Date(date);
 
-  console.log('Received request body:', req.body);
+        const [startHours, startMinutes, startSeconds] = currentShift.starttime.split(':').map(Number);
+        const [endHours, endMinutes, endSeconds] = currentShift.endtime.split(':').map(Number);
 
-  try {
-    // Connect to the database
-    const pool = await sql.connect(dbConfig);
+        shiftStartDate.setHours(startHours, startMinutes, startSeconds);
+        shiftEndDate.setHours(endHours, endMinutes, endSeconds);
 
-    // Fetch the live count data based on the provided date
-    const liveCountData = await pool.request()
-      .input('actualDate', sql.DateTime, actualDate)
-      .input('Line', sql.Int, Line)
-      .query(`
-        SELECT  actual_machine_no, SUM(run_time) AS totalrun_time
-        FROM [Garware].[dbo].[atual_master_live]
-        WHERE  CONVERT(Date, shift_start) = @actualDate 
-        AND line_no  = @Line
-        GROUP BY actual_machine_no
-      `);
+        if (endHours < startHours) { // If the shift spans midnight
+          if (now.getHours() < startHours) {
+            shiftStartDate.setDate(shiftStartDate.getDate() - 1);
+          } else {
+            shiftEndDate.setDate(shiftEndDate.getDate() + 1);
+          }
+        }
 
-    // Check if any data was found
-    if (liveCountData.recordset.length === 0) {
-      res.status(404).json({ message: 'No live count data found for the given date.' });
-      return;
-    }
+        const formatDate = (date) => {
+          const [day, month, year] = [date.getDate(), date.getMonth() + 1, date.getFullYear()];
+          const [hours, minutes, seconds] = [date.getHours(), date.getMinutes(), date.getSeconds()];
+          return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.000Z`;
+        };
 
-    // Convert total run time from seconds to minutes and hours
-    const totalrun_time = liveCountData.recordset.map(record => {
-      const runTimeInSeconds = record.totalrun_time;
+        const shiftStartDateISO = formatDate(shiftStartDate);
+        const shiftEndDateISO = formatDate(shiftEndDate);
 
-      // Convert seconds to minutes
-      const runTimeInMinutes = typeof runTimeInSeconds === 'number' && !isNaN(runTimeInSeconds)
-        ? Math.floor(runTimeInSeconds / 60)
-        : 0;
+        console.log('Shift Start Date Formatted:', shiftStartDateISO);
+        console.log('Shift End Date Formatted:', shiftEndDateISO);
 
-      // Convert minutes to hours and format to 2 decimal places
-      const runTimeInHours = (runTimeInMinutes / 60).toFixed(2);
-      
-      return {
-        ...record,
-        run_time_minutes: runTimeInMinutes,
-        run_time_hours: runTimeInHours
-      };
-    });
+        let liveCountData = await pool.request()
+          .input('date1', sql.DateTime, shiftStartDateISO)
+          .input('date2', sql.DateTime, shiftEndDateISO)
+          .input('Line', sql.Int, Line)
+          .query(`
+            WITH LatestEntries AS (
+              SELECT 
+                actual_machine_no,
+                final_live_count,
+                construction,
+                target,
+                actual_date,
+                ROW_NUMBER() OVER (
+                  PARTITION BY actual_machine_no 
+                  ORDER BY actual_date DESC
+                ) AS rn
+              FROM 
+                [Garware].[dbo].[atual_master_live]
+              WHERE 
+                line_no = @Line AND 
+                shift_start >= @date1 
+                AND shift_end <= @date2
+            ),
+            TotalCounts AS (
+              SELECT
+                actual_machine_no,
+                SUM(final_live_count) AS totalLiveCount,
+                SUM(run_time) AS totalrun_time
+              FROM
+                [Garware].[dbo].[atual_master_live]
+              WHERE
+                line_no = @Line AND 
+                shift_start >= @date1 
+                AND shift_end <= @date2
+              GROUP BY
+                actual_machine_no
+            )
+            SELECT
+              tc.actual_machine_no,
+              tc.totalrun_time,
+              tc.totalLiveCount,
+              le.construction AS latest_construction,
+              le.target
+            FROM
+              TotalCounts tc
+            JOIN
+              LatestEntries le
+            ON tc.actual_machine_no = le.actual_machine_no
+            WHERE le.rn = 1;
+          `);
 
-    console.log("Total run time in minutes and hours:", totalrun_time);
+        if (liveCountData.recordset.length > 0) {
+          const totalrun_time = liveCountData.recordset.map(record => {
+            const runTimeInSeconds = record.totalrun_time;
+            const runTimeInMinutes = typeof runTimeInSeconds === 'number' && !isNaN(runTimeInSeconds)
+              ? Math.floor(runTimeInSeconds / 60)
+              : 0;
+            const runTimeInHours = runTimeInMinutes / 60;
 
-    // Send the response with the calculated run hours
-    res.status(200).json({ 
-      message: 'RUN HRS. | Line machine (line-machine wise) for the entire day',
-      totalrun_time
-    });
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
-  } finally {
-    // Close the database connection
-    sql.close();
-  }
-});
+            return {
+              ...record,
+              run_time_minutes: runTimeInMinutes,
+              run_time_hours: runTimeInHours.toFixed(2)
+            };
+          });
 
-
-// OEE api's
-// for calculate OEE All Plant
-app.post('/api/calculateOEEAllPlant', async (req, res) => {
-  const { date1, date2 } = req.body;
-  
-  console.log('Received request body:', req.body);
-  
-  try {
-    // Connect to the database
-    const pool = await sql.connect(dbConfig);
-
-    // Convert 24 hours into minutes and store it in variable1
-    const variable1 = 24 * 60;
-
-    // Select tea_time and lunch_time from shift_master table and subtract it from variable1
-    const shiftData = await pool.request()
-      .query(`
-        SELECT SUM(tea_time) AS tea_time, SUM(lunch_time) AS lunch_time
-        FROM [Garware].[dbo].[shift_master]
-      `);
-
-    console.log("variable1:", variable1);
-    if (shiftData.recordset.length === 0) {
-      res.status(404).json({ message: 'No shift data found.' });
-      return;
-    }
-
-    const { tea_time, lunch_time } = shiftData.recordset[0];
-    console.log("tea_time + lunch_time:", tea_time, lunch_time);
-    const variable2 = variable1 - (tea_time + lunch_time);
-    console.log("variable2:", variable2);
-
-    // Calculate Availability
-    const availability = variable2 / variable1;
-
-    // Calculate Performance
-    const targetData = await pool.request()
-     
-      .query(`
-        SELECT SUM(Target_in_mtr) AS totalTarget
-        FROM [Garware].[dbo].[master_set_machine_target]
         
-      `);
 
-    if (targetData.recordset.length === 0) {
-      res.status(404).json({ message: 'No target data found for the given line.' });
-      return;
+          results.push({
+            line: Line,
+            date,
+            totalrun_time,
+           
+          });
+        } else {
+          results.push({
+            line: Line,
+            date,
+            message: 'No live count data found for the given date range and line.'
+          });
+        }
+      }
     }
 
-    const variable3 = targetData.recordset[0].totalTarget;
-    console.log("variable3:", variable3);
+    res.status(200).json({
+      message: 'RUN HRS. | Line-Machine (Line Machine Wise Shift Wise)',
+      data: results
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
 
-    // Select live count data based on the shift start and end times
-    const liveCountData = await pool.request()
-      
-      .input('date1', sql.DateTime, date1)
-      .input('date2', sql.DateTime, date2)
-      .query(`
-        SELECT SUM(final_live_count) AS totalLiveCount
-        FROM [Garware].[dbo].[atual_master_live]
-        WHERE  CONVERT(date, shift_start) >= @date1 
-        AND CONVERT(date, shift_end) <= @date2
-      `);
 
-    if (liveCountData.recordset.length === 0) {
-      res.status(404).json({ message: 'No live count data found for the given date range and line.' });
-      return;
+// run hrs all line by  whole day wise
+app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
+  const { actualDates } = req.body; // Expecting an array of actualDate
+
+  console.log('Received request body:', req.body);
+
+  try {
+    // Connect to the database
+    const pool = await sql.connect(dbConfig);
+
+    // Array to store results for each date
+    let results = [];
+
+    // Iterate over the array of dates
+    for (const actualDate of actualDates) {
+      console.log(`Processing date: ${actualDate}`);
+
+      // Fetch the live count data based on the provided date
+      const liveCountData = await pool.request()
+        .input('actualDate', sql.DateTime, actualDate)
+        .query(`
+          SELECT line_no, SUM(run_time) AS totalrun_time
+          FROM [Garware].[dbo].[atual_master_live]
+          WHERE CONVERT(Date, shift_start) = @actualDate 
+          GROUP BY line_no
+        `);
+
+      // Convert total run time from seconds to minutes and hours
+      const totalrun_time = liveCountData.recordset.map(record => {
+        const runTimeInSeconds = record.totalrun_time;
+
+        // Convert seconds to minutes
+        const runTimeInMinutes = typeof runTimeInSeconds === 'number' && !isNaN(runTimeInSeconds)
+          ? Math.floor(runTimeInSeconds / 60)
+          : 0;
+
+        // Convert minutes to hours and format to 2 decimal places
+        const runTimeInHours = (runTimeInMinutes / 60).toFixed(2);
+
+        return {
+          ...record,
+          run_time_minutes: runTimeInMinutes,
+          run_time_hours: runTimeInHours
+        };
+      });
+
+      // If data is found, store the results
+      if (totalrun_time.length > 0) {
+        results.push({
+          actualDate,
+          totalrun_time
+        });
+      } else {
+        results.push({
+          actualDate,
+          message: 'No live count data found for this date.'
+        });
+      }
     }
 
-    const variable4 = liveCountData.recordset[0].totalLiveCount;
-    console.log("variable4:", variable4);
-    const performance = variable4 / variable3;
+    console.log("Final Results:", results);
 
-    // Calculate Quality
-    const variable5 = 0.9 * variable4;
-    console.log("variable5:", variable5);
-    const quality = variable5 / variable4;
-
-    // Calculate OEE as a percentage
-    const oee = (availability * performance * quality) * 100;
-
-    console.log('Availability:', availability);
-    console.log('Performance:', performance);
-    console.log('Quality:', quality);
-    console.log('OEE:', oee);
-
-    res.status(200).json({ 
-      message: 'OEE calculations completed successfully. | All Plants',
-      availability,
-      performance,
-      quality,
-      oee
+    // Send the response with the calculated run hours for all dates
+    res.status(200).json({
+      message: 'RUN HRS. | All plants (line-wise) for the entire day across multiple dates',
+      results
     });
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   } finally {
-    // Close database connection
-    // await sql.close();
+    // Close the database connection
+    sql.close();
   }
 });
 
-// for calculate OEE Line Wise
-app.post('/api/calculateOEELineWise', async (req, res) => {
-  const { date1, date2, Line } = req.body;
-  
+// run hrs all line by whole day wise  || target || latest construction || actual live count mtr wise (length counters)
+app.post('/api/run_hrs_Line_machine_wholeDay', async (req, res) => {
+  const { dataArray } = req.body; // Expecting an array of objects with 'date' and 'Line'
+
   console.log('Received request body:', req.body);
-  
+
+  try {
+    // Connect to the database
+    const pool = await sql.connect(dbConfig);
+
+    const results = [];
+
+    // Iterate through each item in the dataArray
+    for (const { actualDate, Line } of dataArray) {
+      console.log(`Processing Line: ${Line} for Date: ${actualDate}`);
+
+    
+
+
+        let liveCountData = await pool.request()
+        .input('actualDate', sql.DateTime, actualDate)
+         .input('Line', sql.Int, Line)
+          .query(`
+            WITH LatestEntries AS (
+              SELECT 
+                actual_machine_no,
+                final_live_count,
+                construction,
+                target,
+                actual_date,
+                ROW_NUMBER() OVER (
+                  PARTITION BY actual_machine_no 
+                  ORDER BY actual_date DESC
+                ) AS rn
+              FROM 
+                [Garware].[dbo].[atual_master_live]
+              WHERE 
+                line_no = @Line AND 
+                 CONVERT(Date, shift_start) = @actualDate
+            ),
+            TotalCounts AS (
+              SELECT
+                actual_machine_no,
+                SUM(final_live_count) AS totalLiveCount,
+                SUM(run_time) AS totalrun_time
+              FROM
+                [Garware].[dbo].[atual_master_live]
+              WHERE
+                line_no = @Line AND 
+                CONVERT(Date, shift_start) = @actualDate
+              GROUP BY
+                actual_machine_no
+            )
+            SELECT
+              tc.actual_machine_no,
+              tc.totalrun_time,
+              tc.totalLiveCount,
+              le.construction AS latest_construction,
+              le.target
+            FROM
+              TotalCounts tc
+            JOIN
+              LatestEntries le
+            ON tc.actual_machine_no = le.actual_machine_no
+            WHERE le.rn = 1;
+          `);
+
+        if (liveCountData.recordset.length > 0) {
+          const totalrun_time = liveCountData.recordset.map(record => {
+            const runTimeInSeconds = record.totalrun_time;
+            const runTimeInMinutes = typeof runTimeInSeconds === 'number' && !isNaN(runTimeInSeconds)
+              ? Math.floor(runTimeInSeconds / 60)
+              : 0;
+            const runTimeInHours = runTimeInMinutes / 60;
+
+            return {
+              ...record,
+              run_time_minutes: runTimeInMinutes,
+              run_time_hours: runTimeInHours.toFixed(2)
+            };
+          });
+
+        
+
+          results.push({
+            line: Line,
+            actualDate,
+            totalrun_time,
+           
+          });
+        } else {
+          results.push({
+            line: Line,
+            actualDate,
+            message: 'No live count data found for the given date range and line.'
+          });
+        }
+      }
+    
+
+    res.status(200).json({
+      message: 'RUN HRS. | Line machine (line-machine wise) for the entire day',
+      data: results
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+
+
+
+
+
+
+app.post('/api/calculateOEEAllPlant', async (req, res) => {
+  const dataArray = req.body;
+
+  console.log('Received request body:', dataArray);
+
   try {
     // Connect to the database
     const pool = await sql.connect(dbConfig);
@@ -1424,11 +1522,10 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
     const variable1 = 24 * 60;
 
     // Select tea_time and lunch_time from shift_master table and subtract it from variable1
-    const shiftData = await pool.request()
-      .query(`
-        SELECT SUM(tea_time) AS tea_time, SUM(lunch_time) AS lunch_time
-        FROM [Garware].[dbo].[shift_master]
-      `);
+    const shiftData = await pool.request().query(`
+      SELECT SUM(tea_time) AS tea_time, SUM(lunch_time) AS lunch_time
+      FROM [Garware].[dbo].[shift_master]
+    `);
 
     console.log("variable1:", variable1);
     if (shiftData.recordset.length === 0) {
@@ -1444,73 +1541,203 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
     // Calculate Availability
     const availability = variable2 / variable1;
 
-    // Calculate Performance
-    const targetData = await pool.request()
-    .input('Line', sql.Int, Line)
-      .query(`
+    const results = [];
+
+    for (const data of dataArray) {
+      const { date1, date2 } = data;
+
+      // Calculate Performance
+      const targetData = await pool.request().query(`
         SELECT SUM(Target_in_mtr) AS totalTarget
         FROM [Garware].[dbo].[master_set_machine_target]
-        where line_no = @Line
       `);
 
-    if (targetData.recordset.length === 0) {
-      res.status(404).json({ message: 'No target data found for the given line.' });
-      return;
+      if (targetData.recordset.length === 0) {
+        res.status(404).json({ message: 'No target data found for the given line.' });
+        return;
+      }
+
+      const variable3 = targetData.recordset[0].totalTarget;
+      console.log("variable3:", variable3);
+
+      // Select live count data based on the shift start and end times
+      const liveCountData = await pool.request()
+        .input('date1', sql.DateTime, date1)
+        .input('date2', sql.DateTime, date2)
+        .query(`
+          SELECT SUM(final_live_count) AS totalLiveCount
+          FROM [Garware].[dbo].[atual_master_live]
+          WHERE CONVERT(date, shift_start) >= @date1 
+          AND CONVERT(date, shift_end) <= @date2
+        `);
+
+      if (liveCountData.recordset.length === 0) {
+        res.status(404).json({ message: 'No live count data found for the given date range and line.' });
+        return;
+      }
+
+      const variable4 = liveCountData.recordset[0].totalLiveCount;
+      console.log("variable4:", variable4);
+      const performance = variable4 / variable3;
+
+      // Calculate Quality
+      const variable5 = 0.9 * variable4;
+      console.log("variable5:", variable5);
+      const quality = variable5 / variable4;
+
+      // Calculate OEE as a percentage
+      const oee = (availability * performance * quality) * 100;
+
+      console.log('Availability:', availability);
+      console.log('Performance:', performance);
+      console.log('Quality:', quality);
+      console.log('OEE:', oee);
+
+      results.push({
+        date1,
+        date2,
+        availability,
+        performance,
+        quality,
+        oee
+      });
     }
 
-    const variable3 = targetData.recordset[0].totalTarget;
-    console.log("variable3:", variable3);
-
-    // Select live count data based on the shift start and end times
-    const liveCountData = await pool.request()
-      .input('Line', sql.Int, Line)
-      .input('date1', sql.DateTime, date1)
-      .input('date2', sql.DateTime, date2)
-      .query(`
-        SELECT SUM(final_live_count) AS totalLiveCount
-        FROM [Garware].[dbo].[atual_master_live]
-        WHERE  CONVERT(date, shift_start) >= @date1 
-        AND CONVERT(date, shift_end) <= @date2
-        and line_no = @Line
-      `);
-
-    if (liveCountData.recordset.length === 0) {
-      res.status(404).json({ message: 'No live count data found for the given date range and line.' });
-      return;
-    }
-
-    const variable4 = liveCountData.recordset[0].totalLiveCount;
-    console.log("variable4:", variable4);
-    const performance = variable4 / variable3;
-
-    // Calculate Quality
-    const variable5 = 0.9 * variable4;
-    console.log("variable5:", variable5);
-    const quality = variable5 / variable4;
-
-    // Calculate OEE as a percentage
-    const oee = (availability * performance * quality) * 100;
-
-    console.log('Availability:', availability);
-    console.log('Performance:', performance);
-    console.log('Quality:', quality);
-    console.log('OEE:', oee);
-
-    res.status(200).json({ 
-      message: 'OEE calculations completed successfully. | Line Wise',
-      availability,
-      performance,
-      quality,
-      oee
+    res.status(200).json({
+      message: 'OEE calculations completed successfully. | All Plants',
+      data: results
     });
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ message: 'Internal Server Error' });
   } finally {
     // Close database connection
-    // await sql.close();
+    sql.close();
   }
 });
+
+
+
+
+
+
+
+
+app.post('/api/calculateOEELineWise', async (req, res) => {
+  const dataArray = req.body;
+
+  console.log('Received request body:', dataArray);
+
+  try {
+    // Connect to the database
+    const pool = await sql.connect(dbConfig);
+
+    // Convert 24 hours into minutes and store it in variable1
+    const variable1 = 24 * 60;
+
+    // Select tea_time and lunch_time from shift_master table and subtract it from variable1
+    const shiftData = await pool.request().query(`
+      SELECT SUM(tea_time) AS tea_time, SUM(lunch_time) AS lunch_time
+      FROM [Garware].[dbo].[shift_master]
+    `);
+
+    console.log("variable1:", variable1);
+    if (shiftData.recordset.length === 0) {
+      res.status(404).json({ message: 'No shift data found.' });
+      return;
+    }
+
+    const { tea_time, lunch_time } = shiftData.recordset[0];
+    console.log("tea_time + lunch_time:", tea_time, lunch_time);
+    const variable2 = variable1 - (tea_time + lunch_time);
+    console.log("variable2:", variable2);
+
+    // Calculate Availability
+    const availability = variable2 / variable1;
+
+    const results = [];
+
+    for (const data of dataArray) {
+      const { date1, date2, Line } = data;
+
+      // Calculate Performance
+      const targetData = await pool.request()
+        .input('Line', sql.Int, Line)
+        .query(`
+          SELECT SUM(Target_in_mtr) AS totalTarget
+          FROM [Garware].[dbo].[master_set_machine_target]
+          WHERE line_no = @Line
+        `);
+
+      if (targetData.recordset.length === 0) {
+        res.status(404).json({ message: 'No target data found for the given line.' });
+        return;
+      }
+
+      const variable3 = targetData.recordset[0].totalTarget;
+      console.log("variable3:", variable3);
+
+      // Select live count data based on the shift start and end times
+      const liveCountData = await pool.request()
+        .input('Line', sql.Int, Line)
+        .input('date1', sql.DateTime, date1)
+        .input('date2', sql.DateTime, date2)
+        .query(`
+          SELECT SUM(final_live_count) AS totalLiveCount
+          FROM [Garware].[dbo].[atual_master_live]
+          WHERE CONVERT(date, shift_start) >= @date1 
+          AND CONVERT(date, shift_end) <= @date2
+          AND line_no = @Line
+        `);
+
+      if (liveCountData.recordset.length === 0) {
+        res.status(404).json({ message: 'No live count data found for the given date range and line.' });
+        return;
+      }
+
+      const variable4 = liveCountData.recordset[0].totalLiveCount;
+      console.log("variable4:", variable4);
+      const performance = variable4 / variable3;
+
+      // Calculate Quality
+      const variable5 = 0.9 * variable4;
+      console.log("variable5:", variable5);
+      const quality = variable5 / variable4;
+
+      // Calculate OEE as a percentage
+      const oee = (availability * performance * quality) * 100;
+
+      console.log('Availability:', availability);
+      console.log('Performance:', performance);
+      console.log('Quality:', quality);
+      console.log('OEE:', oee);
+
+      results.push({
+        date1,
+        date2,
+        Line,
+        availability,
+        performance,
+        quality,
+        oee
+      });
+    }
+
+    res.status(200).json({
+      message: 'OEE calculations completed successfully. | Line Wise',
+      data: results
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  } finally {
+    // Close database connection
+    sql.close();
+  }
+});
+
+
+
 
 
 // for Token
@@ -1533,10 +1760,119 @@ const verifyToken = (req, res, next) => {
 
 
 // for calculate OEE Machine Wise
-app.post('/api/calculateOEELine_machine', verifyToken, async (req, res) => {
-  const { date1, date2, Line, machine } = req.body;
+// app.post('/api/calculateOEELine_machine', verifyToken, async (req, res) => {
+//   const { date1, date2, Line, machine } = req.body;
   
-  console.log('Received request body:', req.body);
+//   console.log('Received request body:', req.body);
+  
+//   try {
+//     // Connect to the database
+//     const pool = await sql.connect(dbConfig);
+
+//     // Convert 24 hours into minutes and store it in variable1
+//     const variable1 = 24 * 60;
+
+//     // Select tea_time and lunch_time from shift_master table and subtract it from variable1
+//     const shiftData = await pool.request()
+//       .query(`
+//         SELECT SUM(tea_time) AS tea_time, SUM(lunch_time) AS lunch_time
+//         FROM [Garware].[dbo].[shift_master]
+//       `);
+
+//     console.log("variable1:", variable1);
+//     if (shiftData.recordset.length === 0) {
+//       res.status(404).json({ message: 'No shift data found.' });
+//       return;
+//     }
+
+//     const { tea_time, lunch_time } = shiftData.recordset[0];
+//     console.log("tea_time + lunch_time:", tea_time, lunch_time);
+//     const variable2 = variable1 - (tea_time + lunch_time);
+//     console.log("variable2:", variable2);
+
+//     // Calculate Availability
+//     const availability = variable2 / variable1;
+
+//     // Calculate Performance
+//     const targetData = await pool.request()
+//     .input('Line', sql.Int, Line)
+//     .input('machine', sql.Int, machine)
+//       .query(`
+//         SELECT SUM(Target_in_mtr) AS totalTarget
+//         FROM [Garware].[dbo].[master_set_machine_target]
+//         where line_no = @Line and machine_no = @machine
+//       `);
+
+//     if (targetData.recordset.length === 0) {
+//       res.status(404).json({ message: 'No target data found for the given line.' });
+//       return;
+//     }
+
+//     const variable3 = targetData.recordset[0].totalTarget;
+//     console.log("variable3:", variable3);
+
+//     // Select live count data based on the shift start and end times
+//     const liveCountData = await pool.request()
+//       .input('Line', sql.Int, Line)
+//       .input('date1', sql.DateTime, date1)
+//       .input('date2', sql.DateTime, date2)
+//       .input('machine', sql.Int, machine)
+//       .query(`
+//         SELECT SUM(final_live_count) AS totalLiveCount
+//         FROM [Garware].[dbo].[atual_master_live]
+//         WHERE  CONVERT(date, shift_start) >= @date1 
+//         AND CONVERT(date, shift_end) <= @date2
+//         and line_no = @Line 
+//         and actual_machine_no = @machine
+//       `);
+
+//     if (liveCountData.recordset.length === 0) {
+//       res.status(404).json({ message: 'No live count data found for the given date range and line.' });
+//       return;
+//     }
+
+//     const variable4 = liveCountData.recordset[0].totalLiveCount;
+//     console.log("variable4:", variable4);
+//     const performance = variable4 / variable3;
+
+//     // Calculate Quality
+//     const variable5 = 0.9 * variable4;
+//     console.log("variable5:", variable5);
+//     const quality = variable5 / variable4;
+
+//     // Calculate OEE as a percentage
+//     const oee = (availability * performance * quality) * 100;
+
+//     console.log('Availability:', availability);
+//     console.log('Performance:', performance);
+//     console.log('Quality:', quality);
+//     console.log('OEE:', oee);
+
+//     res.status(200).json({ 
+//       message: 'OEE calculations completed successfully. | Machine Wise',
+//       availability,
+//       performance,
+//       quality,
+//       oee
+//     });
+//   } catch (error) {
+//     console.error('Error:', error);
+//     res.status(500).json({ message: 'Internal Server Error' });
+//   } finally {
+//     // Close database connection
+//     // await sql.close();
+//   }
+// });
+
+
+
+// Using Array
+
+
+app.post('/api/calculateOEELine_machine',  async (req, res) => {
+  const dataArray = req.body;  // Expecting an array of objects with date1, date2, Line, and machine
+  
+  console.log('Received request body:', dataArray);
   
   try {
     // Connect to the database
@@ -1563,71 +1899,100 @@ app.post('/api/calculateOEELine_machine', verifyToken, async (req, res) => {
     const variable2 = variable1 - (tea_time + lunch_time);
     console.log("variable2:", variable2);
 
-    // Calculate Availability
-    const availability = variable2 / variable1;
+    // Array to store results for each set of inputs
+    const results = [];
 
-    // Calculate Performance
-    const targetData = await pool.request()
-    .input('Line', sql.Int, Line)
-    .input('machine', sql.Int, machine)
-      .query(`
-        SELECT SUM(Target_in_mtr) AS totalTarget
-        FROM [Garware].[dbo].[master_set_machine_target]
-        where line_no = @Line and machine_no = @machine
-      `);
+    // Loop through each set of data in the array
+    for (const data of dataArray) {
+      const { date1, date2, Line, machine } = data;
 
-    if (targetData.recordset.length === 0) {
-      res.status(404).json({ message: 'No target data found for the given line.' });
-      return;
+      // Calculate Availability
+      const availability = variable2 / variable1;
+
+      // Calculate Performance
+      const targetData = await pool.request()
+        .input('Line', sql.Int, Line)
+        .input('machine', sql.Int, machine)
+        .query(`
+          SELECT SUM(Target_in_mtr) AS totalTarget
+          FROM [Garware].[dbo].[master_set_machine_target]
+          WHERE line_no = @Line AND machine_no = @machine
+        `);
+
+      if (targetData.recordset.length === 0) {
+        results.push({ 
+          message: `No target data found for line ${Line} and machine ${machine}.`,
+          date1,
+          date2,
+          Line,
+          machine
+        });
+        continue;  // Skip to the next iteration
+      }
+
+      const variable3 = targetData.recordset[0].totalTarget;
+      console.log("variable3:", variable3);
+
+      // Select live count data based on the shift start and end times
+      const liveCountData = await pool.request()
+        .input('Line', sql.Int, Line)
+        .input('date1', sql.DateTime, date1)
+        .input('date2', sql.DateTime, date2)
+        .input('machine', sql.Int, machine)
+        .query(`
+          SELECT SUM(final_live_count) AS totalLiveCount
+          FROM [Garware].[dbo].[atual_master_live]
+          WHERE CONVERT(date, shift_start) >= @date1 
+          AND CONVERT(date, shift_end) <= @date2
+          AND line_no = @Line 
+          AND actual_machine_no = @machine
+        `);
+
+      if (liveCountData.recordset.length === 0) {
+        results.push({ 
+          message: `No live count data found for the given date range and line ${Line} and machine ${machine}.`,
+          date1,
+          date2,
+          Line,
+          machine
+        });
+        continue;  // Skip to the next iteration
+      }
+
+      const variable4 = liveCountData.recordset[0].totalLiveCount;
+      console.log("variable4:", variable4);
+      const performance = variable4 / variable3;
+
+      // Calculate Quality
+      const variable5 = 0.9 * variable4;
+      console.log("variable5:", variable5);
+      const quality = variable5 / variable4;
+
+      // Calculate OEE as a percentage
+      const oee = (availability * performance * quality) * 100;
+
+      console.log('Availability:', availability);
+      console.log('Performance:', performance);
+      console.log('Quality:', quality);
+      console.log('OEE:', oee);
+
+      // Push the result for the current iteration
+      results.push({
+        message: `OEE calculations completed successfully for Line ${Line} and Machine ${machine}.`,
+        date1,
+        date2,
+        Line,
+        machine,
+        availability,
+        performance,
+        quality,
+        oee
+      });
     }
 
-    const variable3 = targetData.recordset[0].totalTarget;
-    console.log("variable3:", variable3);
+    // Send the aggregated results as the response
+    res.status(200).json(results);
 
-    // Select live count data based on the shift start and end times
-    const liveCountData = await pool.request()
-      .input('Line', sql.Int, Line)
-      .input('date1', sql.DateTime, date1)
-      .input('date2', sql.DateTime, date2)
-      .input('machine', sql.Int, machine)
-      .query(`
-        SELECT SUM(final_live_count) AS totalLiveCount
-        FROM [Garware].[dbo].[atual_master_live]
-        WHERE  CONVERT(date, shift_start) >= @date1 
-        AND CONVERT(date, shift_end) <= @date2
-        and line_no = @Line 
-        and actual_machine_no = @machine
-      `);
-
-    if (liveCountData.recordset.length === 0) {
-      res.status(404).json({ message: 'No live count data found for the given date range and line.' });
-      return;
-    }
-
-    const variable4 = liveCountData.recordset[0].totalLiveCount;
-    console.log("variable4:", variable4);
-    const performance = variable4 / variable3;
-
-    // Calculate Quality
-    const variable5 = 0.9 * variable4;
-    console.log("variable5:", variable5);
-    const quality = variable5 / variable4;
-
-    // Calculate OEE as a percentage
-    const oee = (availability * performance * quality) * 100;
-
-    console.log('Availability:', availability);
-    console.log('Performance:', performance);
-    console.log('Quality:', quality);
-    console.log('OEE:', oee);
-
-    res.status(200).json({ 
-      message: 'OEE calculations completed successfully. | Machine Wise',
-      availability,
-      performance,
-      quality,
-      oee
-    });
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ message: 'Internal Server Error' });
@@ -1636,6 +2001,8 @@ app.post('/api/calculateOEELine_machine', verifyToken, async (req, res) => {
     // await sql.close();
   }
 });
+
+
 
 
 

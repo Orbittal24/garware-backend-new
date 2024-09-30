@@ -9,7 +9,7 @@ const app = express();
 const port = 3001; // Choose any available port
 
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: 'http://192.168.10.168:3000',
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type']
 }));    

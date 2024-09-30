@@ -28,10 +28,10 @@ app.use(express.json());
 
 // Database configuration
 const dbConfig = {
-  user: 'admin',
-  password: 'admin7',
-  server: 'localhost\\MSSQLSERVER2022',
-  database: 'Garware',
+  user: 'nsa',
+  password: 'namashivay',
+  server: '192.168.10.10',
+  database: 'RUNHOURS',
   options: {
     encrypt: true, // Use this if you're on Windows Azure
     trustServerCertificate: true, // Accept self-signed certificate
@@ -121,7 +121,7 @@ const pool = await sql.connect(dbConfig)
               const line_check = await pool.request()
               .input('machine_number', sql.Int, machineId)
               .input('esp_no', sql.Int, Esp)
-              .query(`SELECT * FROM [Garware].[dbo].[mater_line_machine_esp] 
+              .query(`SELECT * FROM [RUNHOURS].[dbo].[mater_line_machine_esp] 
                       WHERE 
                           machine_number = @machine_number
                           AND esp_no = @esp_no`);
@@ -142,7 +142,7 @@ const pool = await sql.connect(dbConfig)
                           const construction_check = await pool.request()
                           .input('machine_no', sql.Int, actual_machine_no)
                           .input('Line', sql.Int, Line)
-                          .query(`SELECT TOP 1 * FROM [Garware].[dbo].[master_set_production] 
+                          .query(`SELECT TOP 1 * FROM [RUNHOURS].[dbo].[master_set_production] 
                                   WHERE 
                                       machine_no = @machine_no AND
                                       line_no = @Line
@@ -162,7 +162,7 @@ const pool = await sql.connect(dbConfig)
 const spool_check = await pool.request()
 .input('machine_no', sql.Int, actual_machine_no)
 .input('Line', sql.Int, Line)
-.query(`SELECT TOP 1 * FROM [Garware].[dbo].[master_set_production] 
+.query(`SELECT TOP 1 * FROM [RUNHOURS].[dbo].[master_set_production] 
         WHERE 
             machine_no = @machine_no AND
             line_no = @Line
@@ -207,7 +207,7 @@ await pool.request()
     .input('esp_no', sql.VarChar, Esp)
     .input('status', sql.VarChar, 'online')
     .input('update_status_time', sql.DateTime2, adjustedLocalTimeISO) // Adjusted IST timestamp
-    .query(`MERGE [Garware].[dbo].[master_machine_status] AS target
+    .query(`MERGE [RUNHOURS].[dbo].[master_machine_status] AS target
             USING (SELECT @line_number AS line_number, @machine_number AS machine_number, @esp_no AS esp_no) AS source
             ON target.line_number = source.line_number AND target.machine_number = source.machine_number AND target.esp_no = source.esp_no
             WHEN MATCHED THEN
@@ -232,7 +232,7 @@ const currentDateString = now.toISOString().split('T')[0]; // Get current date i
 console.log("Current Date:", currentDateString);
 
 const result = await pool.request()
-.query(`SELECT * FROM [Garware].[dbo].[shift_master]`);
+.query(`SELECT * FROM [RUNHOURS].[dbo].[shift_master]`);
 const shifts = result.recordset;
 
 let currentShift = null;
@@ -295,7 +295,7 @@ const targetResult = await pool.request()
 .input('line_no', sql.Int, Line)
 .input('machine_no', sql.Int, actual_machine_no)
 .query(`SELECT calculate_in_mtr 
-        FROM [Garware].[dbo].[master_set_machine_target] 
+        FROM [RUNHOURS].[dbo].[master_set_machine_target] 
         WHERE line_no = @line_no 
           AND machine_no = @machine_no`);
 
@@ -314,7 +314,7 @@ console.log('Target Result2:', targetResult.recordset);
 const shiftnoResult = await pool.request()
 .query(`
   SELECT COUNT(shift_no) AS sr_no
-  FROM [Garware].[dbo].[shift_master]
+  FROM [RUNHOURS].[dbo].[shift_master]
 `);
 const shifts = shiftnoResult.recordset[0].sr_no;
 
@@ -330,7 +330,7 @@ const target = await pool.request()
 .query(`
 SELECT 
 Target_in_mtr
-FROM [Garware].[dbo].[master_set_machine_target]
+FROM [RUNHOURS].[dbo].[master_set_machine_target]
 WHERE line_no = @line_no AND machine_no = @machine_no
 `);
 const total_target = target.recordset[0].Target_in_mtr;
@@ -353,7 +353,7 @@ console.log("current_shift_target: ",current_shift_target)
     .input('shift_end', sql.DateTime2, shiftEndDateISO)      // SQL Server will handle the ISO format
     .input('shift_no', sql.Int, currentShift.shift_no)
     .query(`SELECT * 
-            FROM [Garware].[dbo].[atual_master_live]
+            FROM [RUNHOURS].[dbo].[atual_master_live]
             WHERE actual_machine_no = @machine_no 
               
                AND line_no = @line_no 
@@ -367,7 +367,7 @@ console.log("current_shift_target: ",current_shift_target)
               // .input('line_no', sql.VarChar, Line)
               //  .input('shift_no', sql.Int, currentShift.shift_no)
               // .query(`SELECT * 
-              //         FROM [Garware].[dbo].[atual_master_live]
+              //         FROM [RUNHOURS].[dbo].[atual_master_live]
               //         WHERE actual_machine_no = @machine_no 
                         
               //            AND line_no = @line_no 
@@ -433,7 +433,7 @@ console.log("Esp: ",Esp)
         .input('shift_no', sql.Int, currentShift.shift_no)
         .input('actual_machine_no', sql.Int, actual_machine_no)
         .input('current_shift_target', sql.Float, current_shift_target)
-        .query(`INSERT INTO [Garware].[dbo].[atual_master_live] 
+        .query(`INSERT INTO [RUNHOURS].[dbo].[atual_master_live] 
                 (machine_no, line_no, shift_start, shift_end, actual_date, live_count, final_live_count, construction, run_time, shift_no, esp, actual_machine_no,target, spool_count) 
                 VALUES 
                 (@machine_no, @line_no, @shift_start, @shift_end, @actual_date, @live_count, @final_live_count, @construction, @run_time, @shift_no, @Esp, @actual_machine_no,@current_shift_target, @spool_count)`);
@@ -451,7 +451,7 @@ console.log('Inserted  successfully   after  ')
                 // .query(`
                 //   ;WITH LatestRecord AS (
                 //       SELECT TOP 1 * 
-                //       FROM [Garware].[dbo].[atual_master_live]
+                //       FROM [RUNHOURS].[dbo].[atual_master_live]
                 //       WHERE machine_no = @machine_no 
                 //         AND line_no = @line_no 
                 //       ORDER BY sr_no DESC
@@ -462,7 +462,7 @@ console.log('Inserted  successfully   after  ')
                 // `);
         // Update status to offline
         // await sql.query`
-        //   UPDATE [Garware].[dbo].[OutputTable]
+        //   UPDATE [RUNHOURS].[dbo].[OutputTable]
         //   SET status = 'offline'
         //   WHERE MachineId = ${machineId} and CONVERT(date, entry_date) = CONVERT(date, ${currentTime})`;
         // console.log(`Machine ID: ${machineId} is offline`);
@@ -490,7 +490,7 @@ console.log('ddddddddddfffffffffffffffffff ',actual_machine_no)
   .query(`
     ;WITH LatestRecord AS (
         SELECT TOP 1 * 
-        FROM [Garware].[dbo].[atual_master_live]
+        FROM [RUNHOURS].[dbo].[atual_master_live]
         WHERE actual_machine_no = @machine_no 
           AND line_no = @line_no 
            ORDER BY sr_no DESC
@@ -535,7 +535,7 @@ else {
 //   .query(`
 //     ;WITH LatestRecord AS (
 //         SELECT TOP 1 * 
-//         FROM [Garware].[dbo].[atual_master_live]
+//         FROM [RUNHOURS].[dbo].[atual_master_live]
 //         WHERE machine_no = @machine_no 
 //           AND line_no = @line_no 
 //         ORDER BY sr_no DESC
@@ -564,7 +564,7 @@ previousPulseData.pulseCount = machinePulseCount;
     //   .input('shift_no', sql.Int, currentShift.shift_no)
     //   .input('machinePulseCount', sql.Int, machinePulseCount)
     //   .input('calculate_in_mtr', sql.Float, calculate_in_mtr)
-    //   .query(`UPDATE [Garware].[dbo].[atual_master_live] 
+    //   .query(`UPDATE [RUNHOURS].[dbo].[atual_master_live] 
     //           SET live_count = live_count + @machinePulseCount,
     //             final_live_count = final_live_count + @calculate_in_mtr
     //           WHERE machine_no = @machine_no 
@@ -612,7 +612,7 @@ previousPulseData.pulseCount = machinePulseCount;
       .input('shift_no', sql.Int, currentShift.shift_no)
       .input('actual_machine_no', sql.Int, actual_machine_no)
       .input('current_shift_target', sql.Float, current_shift_target)
-      .query(`INSERT INTO [Garware].[dbo].[atual_master_live] 
+      .query(`INSERT INTO [RUNHOURS].[dbo].[atual_master_live] 
               (machine_no, line_no, shift_start, shift_end, actual_date, live_count, final_live_count, construction, run_time, shift_no, esp, actual_machine_no,target, spool_count) 
               VALUES 
               (@machine_no, @line_no, @shift_start, @shift_end, @actual_date, @live_count, @final_live_count, @construction, @run_time, @shift_no, @Esp, @actual_machine_no,@current_shift_target, @spool_count)`);
@@ -643,7 +643,7 @@ previousPulseData.pulseCount = machinePulseCount;
 //   const shiftnoResult = await pool.request()
 //       .query(`
 //         SELECT COUNT(sr_no) AS sr_no
-//         FROM [Garware].[dbo].[shift_master]
+//         FROM [RUNHOURS].[dbo].[shift_master]
 //       `);
 // const shifts = shiftnoResult.recordset[0].sr_no;
 
@@ -659,7 +659,7 @@ previousPulseData.pulseCount = machinePulseCount;
 //   .query(`
 //     SELECT 
 //       Target_in_mtr
-//     FROM [Garware].[dbo].[master_set_machine_target]
+//     FROM [RUNHOURS].[dbo].[master_set_machine_target]
 //     WHERE line_no = @line_no AND machine_no = @machine_no
 //   `);
 //   const total_target = target.recordset[0].Target_in_mtr;
@@ -679,7 +679,7 @@ previousPulseData.pulseCount = machinePulseCount;
   .input('shift_start', sql.DateTime2, spool_date)
  
   .query(`SELECT SUM(spool_count) AS spool_count
-          FROM [Garware].[dbo].[atual_master_live] 
+          FROM [RUNHOURS].[dbo].[atual_master_live] 
           WHERE machine_no = @machine_no 
          AND esp = @Esp
             AND line_no = @line_no 
@@ -698,7 +698,7 @@ const atual_master_live_count = await pool.request()
   .input('shift_start', sql.DateTime2, spool_date)
  
   .query(`SELECT SUM(live_count) AS live_count
-          FROM [Garware].[dbo].[atual_master_live]
+          FROM [RUNHOURS].[dbo].[atual_master_live]
           WHERE machine_no = @machine_no 
          AND esp = @Esp
             AND line_no = @line_no 
@@ -706,7 +706,7 @@ const atual_master_live_count = await pool.request()
            `);
 
 //  .query( `SELECT SUM(live_count) AS live_count
-//  FROM [Garware].[dbo].[atual_master_live]
+//  FROM [RUNHOURS].[dbo].[atual_master_live]
 //  WHERE machine_no = @machine_no 
 //    AND esp = @Esp
 //    AND line_no = @line_no 
@@ -749,7 +749,7 @@ if (atual_master_live_count1[0].live_count >= masterPulseValue) {
     .input('Esp', sql.Int, Esp)
     .input('shift_start', sql.DateTime2, spool_date) // Ensure spool_date is a DateTime2 value
     .query(`
-      UPDATE [Garware].[dbo].[atual_master_live]
+      UPDATE [RUNHOURS].[dbo].[atual_master_live]
       SET live_count = 0
       WHERE machine_no = @machine_no 
         AND esp = @Esp
@@ -778,7 +778,7 @@ console.log("actual mtr final:",actual.spool_count)
                           .input('Esp', sql.Int, Esp)
                           .input('shift_start', sql.DateTime2, spool_date)
                           .query(`
-                            UPDATE [Garware].[dbo].[atual_master_live]
+                            UPDATE [RUNHOURS].[dbo].[atual_master_live]
                             SET spool_count = 0
                             WHERE machine_no = @machine_no 
                               AND esp = @Esp
@@ -799,7 +799,7 @@ console.log("all:",Line,actual_machine_no,construction, spool_date)
         .input('machine_no', sql.Int, actual_machine_no)
        
         .input('construction', sql.VarChar, construction)
-        .query(`SELECT * FROM [Garware].[dbo].[construction_spool_data] 
+        .query(`SELECT * FROM [RUNHOURS].[dbo].[construction_spool_data] 
                 WHERE line_no = @line_no AND actual_machine_no = @machine_no AND construction = @construction`);
 
       if (existingEntry.recordset.length > 0) {
@@ -809,7 +809,7 @@ console.log("all:",Line,actual_machine_no,construction, spool_date)
           .input('machine_no', sql.Int, actual_machine_no)
           .input('construction', sql.VarChar, construction)
           .input('date', sql.DateTime2, spool_date)
-          .query(`UPDATE [Garware].[dbo].[construction_spool_data]
+          .query(`UPDATE [RUNHOURS].[dbo].[construction_spool_data]
                   SET 
                       spoolly = spoolly + 1
                   WHERE line_no = @line_no AND actual_machine_no = @machine_no AND construction = @construction AND start_time >= @date`);
@@ -819,7 +819,7 @@ console.log("all:",Line,actual_machine_no,construction, spool_date)
         .input('line_no', sql.Int, Line)
         .input('machine_no', sql.Int, actual_machine_no)
         .input('construction', sql.VarChar, construction)
-          .query(`INSERT INTO [Garware].[dbo].[construction_spool_data] 
+          .query(`INSERT INTO [RUNHOURS].[dbo].[construction_spool_data] 
                   (line_no, actual_machine_no, construction, spoolly) 
                   VALUES (@line_no, @machine_no, @construction, 1)`);
       }
@@ -969,7 +969,7 @@ const firstMachineData = machinesData[0];
 //               const line_check = await pool.request()
 //               .input('machine_number', sql.Int, machineId)
 //               .input('esp_no', sql.Int, Esp)
-//               .query(`SELECT * FROM [Garware].[dbo].[mater_line_machine_esp] 
+//               .query(`SELECT * FROM [RUNHOURS].[dbo].[mater_line_machine_esp] 
 //                       WHERE 
 //                           machine_number = @machine_number
 //                           AND esp_no = @esp_no`);
@@ -990,7 +990,7 @@ const firstMachineData = machinesData[0];
 //                           const construction_check = await pool.request()
 //                           .input('machine_no', sql.Int, actual_machine_no)
 //                           .input('Line', sql.Int, Line)
-//                           .query(`SELECT TOP 1 * FROM [Garware].[dbo].[master_set_production] 
+//                           .query(`SELECT TOP 1 * FROM [RUNHOURS].[dbo].[master_set_production] 
 //                                   WHERE 
 //                                       machine_no = @machine_no AND
 //                                       line_no = @Line
@@ -1010,7 +1010,7 @@ const firstMachineData = machinesData[0];
 // const spool_check = await pool.request()
 // .input('machine_no', sql.Int, actual_machine_no)
 // .input('Line', sql.Int, Line)
-// .query(`SELECT TOP 1 * FROM [Garware].[dbo].[master_set_production] 
+// .query(`SELECT TOP 1 * FROM [RUNHOURS].[dbo].[master_set_production] 
 //         WHERE 
 //             machine_no = @machine_no AND
 //             line_no = @Line
@@ -1055,7 +1055,7 @@ const firstMachineData = machinesData[0];
 //     .input('esp_no', sql.VarChar, Esp)
 //     .input('status', sql.VarChar, 'online')
 //     .input('update_status_time', sql.DateTime2, adjustedLocalTimeISO) // Adjusted IST timestamp
-//     .query(`MERGE [Garware].[dbo].[master_machine_status] AS target
+//     .query(`MERGE [RUNHOURS].[dbo].[master_machine_status] AS target
 //             USING (SELECT @line_number AS line_number, @machine_number AS machine_number, @esp_no AS esp_no) AS source
 //             ON target.line_number = source.line_number AND target.machine_number = source.machine_number AND target.esp_no = source.esp_no
 //             WHEN MATCHED THEN
@@ -1080,7 +1080,7 @@ const firstMachineData = machinesData[0];
 // console.log("Current Date:", currentDateString);
 
 // const result = await pool.request()
-// .query(`SELECT * FROM [Garware].[dbo].[shift_master]`);
+// .query(`SELECT * FROM [RUNHOURS].[dbo].[shift_master]`);
 // const shifts = result.recordset;
 
 // let currentShift = null;
@@ -1143,7 +1143,7 @@ const firstMachineData = machinesData[0];
 // .input('line_no', sql.Int, Line)
 // .input('machine_no', sql.Int, actual_machine_no)
 // .query(`SELECT calculate_in_mtr 
-//         FROM [Garware].[dbo].[master_set_machine_target] 
+//         FROM [RUNHOURS].[dbo].[master_set_machine_target] 
 //         WHERE line_no = @line_no 
 //           AND machine_no = @machine_no`);
 
@@ -1162,7 +1162,7 @@ const firstMachineData = machinesData[0];
 // const shiftnoResult = await pool.request()
 // .query(`
 //   SELECT COUNT(shift_no) AS sr_no
-//   FROM [Garware].[dbo].[shift_master]
+//   FROM [RUNHOURS].[dbo].[shift_master]
 // `);
 // const shifts = shiftnoResult.recordset[0].sr_no;
 
@@ -1178,7 +1178,7 @@ const firstMachineData = machinesData[0];
 // .query(`
 // SELECT 
 // Target_in_mtr
-// FROM [Garware].[dbo].[master_set_machine_target]
+// FROM [RUNHOURS].[dbo].[master_set_machine_target]
 // WHERE line_no = @line_no AND machine_no = @machine_no
 // `);
 // const total_target = target.recordset[0].Target_in_mtr;
@@ -1201,7 +1201,7 @@ const firstMachineData = machinesData[0];
 //     .input('shift_end', sql.DateTime2, shiftEndDateISO)      // SQL Server will handle the ISO format
 //     .input('shift_no', sql.Int, currentShift.shift_no)
 //     .query(`SELECT * 
-//             FROM [Garware].[dbo].[atual_master_live]
+//             FROM [RUNHOURS].[dbo].[atual_master_live]
 //             WHERE actual_machine_no = @machine_no 
               
 //                AND line_no = @line_no 
@@ -1215,7 +1215,7 @@ const firstMachineData = machinesData[0];
 //               // .input('line_no', sql.VarChar, Line)
 //               //  .input('shift_no', sql.Int, currentShift.shift_no)
 //               // .query(`SELECT * 
-//               //         FROM [Garware].[dbo].[atual_master_live]
+//               //         FROM [RUNHOURS].[dbo].[atual_master_live]
 //               //         WHERE actual_machine_no = @machine_no 
                         
 //               //            AND line_no = @line_no 
@@ -1281,7 +1281,7 @@ const firstMachineData = machinesData[0];
 //         .input('shift_no', sql.Int, currentShift.shift_no)
 //         .input('actual_machine_no', sql.Int, actual_machine_no)
 //         .input('current_shift_target', sql.Float, current_shift_target)
-//         .query(`INSERT INTO [Garware].[dbo].[atual_master_live] 
+//         .query(`INSERT INTO [RUNHOURS].[dbo].[atual_master_live] 
 //                 (machine_no, line_no, shift_start, shift_end, actual_date, live_count, final_live_count, construction, run_time, shift_no, esp, actual_machine_no,target, spool_count) 
 //                 VALUES 
 //                 (@machine_no, @line_no, @shift_start, @shift_end, @actual_date, @live_count, @final_live_count, @construction, @run_time, @shift_no, @Esp, @actual_machine_no,@current_shift_target, @spool_count)`);
@@ -1299,7 +1299,7 @@ const firstMachineData = machinesData[0];
 //                 // .query(`
 //                 //   ;WITH LatestRecord AS (
 //                 //       SELECT TOP 1 * 
-//                 //       FROM [Garware].[dbo].[atual_master_live]
+//                 //       FROM [RUNHOURS].[dbo].[atual_master_live]
 //                 //       WHERE machine_no = @machine_no 
 //                 //         AND line_no = @line_no 
 //                 //       ORDER BY sr_no DESC
@@ -1310,7 +1310,7 @@ const firstMachineData = machinesData[0];
 //                 // `);
 //         // Update status to offline
 //         // await sql.query`
-//         //   UPDATE [Garware].[dbo].[OutputTable]
+//         //   UPDATE [RUNHOURS].[dbo].[OutputTable]
 //         //   SET status = 'offline'
 //         //   WHERE MachineId = ${machineId} and CONVERT(date, entry_date) = CONVERT(date, ${currentTime})`;
 //         // console.log(`Machine ID: ${machineId} is offline`);
@@ -1338,7 +1338,7 @@ const firstMachineData = machinesData[0];
 //   .query(`
 //     ;WITH LatestRecord AS (
 //         SELECT TOP 1 * 
-//         FROM [Garware].[dbo].[atual_master_live]
+//         FROM [RUNHOURS].[dbo].[atual_master_live]
 //         WHERE actual_machine_no = @machine_no 
 //           AND line_no = @line_no 
 //            ORDER BY sr_no DESC
@@ -1383,7 +1383,7 @@ const firstMachineData = machinesData[0];
 // //   .query(`
 // //     ;WITH LatestRecord AS (
 // //         SELECT TOP 1 * 
-// //         FROM [Garware].[dbo].[atual_master_live]
+// //         FROM [RUNHOURS].[dbo].[atual_master_live]
 // //         WHERE machine_no = @machine_no 
 // //           AND line_no = @line_no 
 // //         ORDER BY sr_no DESC
@@ -1412,7 +1412,7 @@ const firstMachineData = machinesData[0];
 //     //   .input('shift_no', sql.Int, currentShift.shift_no)
 //     //   .input('machinePulseCount', sql.Int, machinePulseCount)
 //     //   .input('calculate_in_mtr', sql.Float, calculate_in_mtr)
-//     //   .query(`UPDATE [Garware].[dbo].[atual_master_live] 
+//     //   .query(`UPDATE [RUNHOURS].[dbo].[atual_master_live] 
 //     //           SET live_count = live_count + @machinePulseCount,
 //     //             final_live_count = final_live_count + @calculate_in_mtr
 //     //           WHERE machine_no = @machine_no 
@@ -1460,7 +1460,7 @@ const firstMachineData = machinesData[0];
 //       .input('shift_no', sql.Int, currentShift.shift_no)
 //       .input('actual_machine_no', sql.Int, actual_machine_no)
 //       .input('current_shift_target', sql.Float, current_shift_target)
-//       .query(`INSERT INTO [Garware].[dbo].[atual_master_live] 
+//       .query(`INSERT INTO [RUNHOURS].[dbo].[atual_master_live] 
 //               (machine_no, line_no, shift_start, shift_end, actual_date, live_count, final_live_count, construction, run_time, shift_no, esp, actual_machine_no,target, spool_count) 
 //               VALUES 
 //               (@machine_no, @line_no, @shift_start, @shift_end, @actual_date, @live_count, @final_live_count, @construction, @run_time, @shift_no, @Esp, @actual_machine_no,@current_shift_target, @spool_count)`);
@@ -1491,7 +1491,7 @@ const firstMachineData = machinesData[0];
 // //   const shiftnoResult = await pool.request()
 // //       .query(`
 // //         SELECT COUNT(sr_no) AS sr_no
-// //         FROM [Garware].[dbo].[shift_master]
+// //         FROM [RUNHOURS].[dbo].[shift_master]
 // //       `);
 // // const shifts = shiftnoResult.recordset[0].sr_no;
 
@@ -1507,7 +1507,7 @@ const firstMachineData = machinesData[0];
 // //   .query(`
 // //     SELECT 
 // //       Target_in_mtr
-// //     FROM [Garware].[dbo].[master_set_machine_target]
+// //     FROM [RUNHOURS].[dbo].[master_set_machine_target]
 // //     WHERE line_no = @line_no AND machine_no = @machine_no
 // //   `);
 // //   const total_target = target.recordset[0].Target_in_mtr;
@@ -1527,7 +1527,7 @@ const firstMachineData = machinesData[0];
 //   .input('shift_start', sql.DateTime2, spool_date)
  
 //   .query(`SELECT SUM(spool_count) AS spool_count
-//           FROM [Garware].[dbo].[atual_master_live] 
+//           FROM [RUNHOURS].[dbo].[atual_master_live] 
 //           WHERE machine_no = @machine_no 
 //          AND esp = @Esp
 //             AND line_no = @line_no 
@@ -1554,7 +1554,7 @@ const firstMachineData = machinesData[0];
 //                           .input('Esp', sql.Int, Esp)
 //                           .input('shift_start', sql.DateTime2, spool_date)
 //                           .query(`
-//                             UPDATE [Garware].[dbo].[atual_master_live]
+//                             UPDATE [RUNHOURS].[dbo].[atual_master_live]
 //                             SET spool_count = 0
 //                             WHERE machine_no = @machine_no 
 //                               AND esp = @Esp
@@ -1572,7 +1572,7 @@ const firstMachineData = machinesData[0];
 //         .input('machine_no', sql.Int, actual_machine_no)
        
 //         .input('construction', sql.VarChar, construction)
-//         .query(`SELECT * FROM [Garware].[dbo].[construction_spool_data] 
+//         .query(`SELECT * FROM [RUNHOURS].[dbo].[construction_spool_data] 
 //                 WHERE line_no = @line_no AND actual_machine_no = @machine_no AND construction = @construction`);
 
 //       if (existingEntry.recordset.length > 0) {
@@ -1582,7 +1582,7 @@ const firstMachineData = machinesData[0];
 //           .input('machine_no', sql.Int, actual_machine_no)
 //           .input('construction', sql.VarChar, construction)
 //           .input('date', sql.DateTime2, spool_date)
-//           .query(`UPDATE [Garware].[dbo].[construction_spool_data]
+//           .query(`UPDATE [RUNHOURS].[dbo].[construction_spool_data]
 //                   SET 
 //                       spoolly = spoolly + 1
 //                   WHERE line_no = @line_no AND actual_machine_no = @machine_no AND construction = @construction AND start_time >= @date`);
@@ -1592,7 +1592,7 @@ const firstMachineData = machinesData[0];
 //         .input('line_no', sql.Int, Line)
 //         .input('machine_no', sql.Int, actual_machine_no)
 //         .input('construction', sql.VarChar, construction)
-//           .query(`INSERT INTO [Garware].[dbo].[construction_spool_data] 
+//           .query(`INSERT INTO [RUNHOURS].[dbo].[construction_spool_data] 
 //                   (line_no, actual_machine_no, construction, spoolly) 
 //                   VALUES (@line_no, @machine_no, @construction, 1)`);
 //       }
@@ -1652,7 +1652,7 @@ const firstMachineData = machinesData[0];
 //     const request = new sql.Request();
 
 //     const query = `
-//       UPDATE [Garware].[dbo].[atual_master_live]
+//       UPDATE [RUNHOURS].[dbo].[atual_master_live]
 //       SET construction = @construction
 //       WHERE actual_machine_no = @machine_no AND
 //       line_no = @line_no AND
@@ -1672,7 +1672,7 @@ const firstMachineData = machinesData[0];
 
 //      // Insert the received data into the master_update_production table
 //      const insertQuery = `
-//      INSERT INTO [Garware].[dbo].[master_update_production] 
+//      INSERT INTO [RUNHOURS].[dbo].[master_update_production] 
 //      (line_no, machine_no, construction, start_time, end_time)
 //      VALUES (@line_no, @machine_no, @construction, @start_time, @end_time);
 //    `;
@@ -1712,7 +1712,7 @@ app.post('/api/updateConstruction', async (req, res) => {
 
       // Update the `atual_master_live` table
       const updateQuery = `
-        UPDATE [Garware].[dbo].[atual_master_live]
+        UPDATE [RUNHOURS].[dbo].[atual_master_live]
         SET construction = @construction
         WHERE actual_machine_no = @machine_no AND
         line_no = @line_no AND
@@ -1728,7 +1728,7 @@ app.post('/api/updateConstruction', async (req, res) => {
 
       // Insert the received data into the `master_update_production` table
       const insertQuery = `
-        INSERT INTO [Garware].[dbo].[master_update_production] 
+        INSERT INTO [RUNHOURS].[dbo].[master_update_production] 
         (line_no, machine_no, construction, start_time, end_time)
         VALUES (@line_no, @machine_no, @construction, @start_time, @end_time);
       `;
@@ -1788,7 +1788,7 @@ app.post('/api/calculate_target_mtr', async (req, res) => {
         .input('line_no', sql.Int, line_no)
         .input('machine_no', sql.Int, machine_no)
         .input('entry_date', sql.Date, entry_date)
-        .query(`SELECT * FROM [Garware].[dbo].[master_set_machine_target] 
+        .query(`SELECT * FROM [RUNHOURS].[dbo].[master_set_machine_target] 
                 WHERE line_no = @line_no AND machine_no = @machine_no`);
 
       if (existingEntry.recordset.length > 0) {
@@ -1801,7 +1801,7 @@ app.post('/api/calculate_target_mtr', async (req, res) => {
           .input('target_in_mtr', sql.Float, target_in_mtr)
           .input('calculate_in_mtr', sql.Float, calculate_in_mtr)
           .input('rpm', sql.Int, rpm)
-          .query(`UPDATE [Garware].[dbo].[master_set_machine_target]
+          .query(`UPDATE [RUNHOURS].[dbo].[master_set_machine_target]
                   SET pulley_diameter = @pulley_diameter, 
                       target_in_mtr = @target_in_mtr, 
                       calculate_in_mtr = @calculate_in_mtr, 
@@ -1817,7 +1817,7 @@ app.post('/api/calculate_target_mtr', async (req, res) => {
           .input('target_in_mtr', sql.Float, target_in_mtr)
           .input('calculate_in_mtr', sql.Float, calculate_in_mtr)
           .input('rpm', sql.Int, rpm)
-          .query(`INSERT INTO [Garware].[dbo].[master_set_machine_target] 
+          .query(`INSERT INTO [RUNHOURS].[dbo].[master_set_machine_target] 
                   (line_no, machine_no, pulley_diameter, entry_date, target_in_mtr, calculate_in_mtr, rpm) 
                   VALUES (@line_no, @machine_no, @pulley_diameter, @entry_date, @target_in_mtr, @calculate_in_mtr, @rpm)`);
       }
@@ -1861,7 +1861,7 @@ app.post('/api/construction_length_counters', async (req, res) => {
       // Query to get meter per kg
       const query1 = `
         SELECT meter_per_kg 
-        FROM [Garware].[dbo].[master_construction_details]
+        FROM [RUNHOURS].[dbo].[master_construction_details]
         WHERE construction_name = @construction 
       `;
       const request1 = pool.request()
@@ -1881,7 +1881,7 @@ app.post('/api/construction_length_counters', async (req, res) => {
       // Query to get total live count
       const query = `
         SELECT SUM(final_live_count) AS totalLiveCount
-        FROM [Garware].[dbo].[atual_master_live]
+        FROM [RUNHOURS].[dbo].[atual_master_live]
         WHERE construction = @construction AND CONVERT(date, actual_date) = @actualDate
       `;
       const request = pool.request()
@@ -1974,7 +1974,7 @@ app.post('/api/run_hrs_all_line_shift', async (req, res) => {
       const dateISO = dateString.toISOString().split('T')[0]; // Convert date to YYYY-MM-DD format
 
       const result = await pool.request()
-        .query(`SELECT * FROM [Garware].[dbo].[shift_master]`);
+        .query(`SELECT * FROM [RUNHOURS].[dbo].[shift_master]`);
       const shifts = result.recordset;
 
       let currentShift = null;
@@ -2028,7 +2028,7 @@ app.post('/api/run_hrs_all_line_shift', async (req, res) => {
           .input('date2', sql.DateTime, shiftEndDateISO)
           .query(`
             SELECT line_no, SUM(run_time) AS totalrun_time
-            FROM [Garware].[dbo].[atual_master_live]
+            FROM [RUNHOURS].[dbo].[atual_master_live]
             WHERE shift_start >= @date1 
               AND shift_end <= @date2
             GROUP BY line_no
@@ -2111,7 +2111,7 @@ app.post('/api/run_hrs_all_line_shift', async (req, res) => {
 //       const currentTimeString = `${currentHours}:${currentMinutes}:${currentSeconds}`;
 //       // console.log("Current Time:", currentTimeString);
 
-//       const result = await pool.request().query(`SELECT * FROM [Garware].[dbo].[shift_master]`);
+//       const result = await pool.request().query(`SELECT * FROM [RUNHOURS].[dbo].[shift_master]`);
 //       const shifts = result.recordset;
 
 //       let currentShift = null;
@@ -2179,7 +2179,7 @@ app.post('/api/run_hrs_all_line_shift', async (req, res) => {
 //         ORDER BY actual_date DESC
 //       ) AS rn
 //     FROM 
-//       [Garware].[dbo].[atual_master_live]
+//       [RUNHOURS].[dbo].[atual_master_live]
 //     WHERE 
 //       line_no = @Line AND 
 //       shift_start >= @date1 
@@ -2191,7 +2191,7 @@ app.post('/api/run_hrs_all_line_shift', async (req, res) => {
 //       SUM(final_live_count) AS totalLiveCount,
 //       SUM(run_time) AS totalrun_time
 //     FROM
-//       [Garware].[dbo].[atual_master_live]
+//       [RUNHOURS].[dbo].[atual_master_live]
 //     WHERE
 //       line_no = @Line AND 
 //       shift_start >= @date1 
@@ -2213,7 +2213,7 @@ app.post('/api/run_hrs_all_line_shift', async (req, res) => {
 //   ON 
 //     tc.actual_machine_no = le.actual_machine_no
 //   JOIN
-//     [Garware].[dbo].[master_set_production] sp
+//     [RUNHOURS].[dbo].[master_set_production] sp
 //   ON 
 //     tc.actual_machine_no = sp.machine_no
 //   WHERE 
@@ -2284,7 +2284,7 @@ app.post('/api/run_hrs_One_line_shift', async (req, res) => {
       const currentSeconds = String(now.getSeconds()).padStart(2, '0');
       const currentTimeString = `${currentHours}:${currentMinutes}:${currentSeconds}`;
 
-      const result = await pool.request().query(`SELECT * FROM [Garware].[dbo].[shift_master]`);
+      const result = await pool.request().query(`SELECT * FROM [RUNHOURS].[dbo].[shift_master]`);
       const shifts = result.recordset;
 
       let currentShift = null;
@@ -2349,7 +2349,7 @@ app.post('/api/run_hrs_One_line_shift', async (req, res) => {
                 ORDER BY actual_date DESC
               ) AS rn
             FROM 
-              [Garware].[dbo].[atual_master_live]
+              [RUNHOURS].[dbo].[atual_master_live]
             WHERE 
               line_no = @Line AND 
               shift_start >= @date1 
@@ -2367,7 +2367,7 @@ app.post('/api/run_hrs_One_line_shift', async (req, res) => {
               SUM(final_live_count) AS totalLiveCount,
               SUM(run_time) AS totalrun_time
             FROM
-              [Garware].[dbo].[atual_master_live]
+              [RUNHOURS].[dbo].[atual_master_live]
             WHERE
               line_no = @Line AND 
               shift_start >= @date1 
@@ -2384,7 +2384,7 @@ app.post('/api/run_hrs_One_line_shift', async (req, res) => {
               machine_no,
               spool_target
             FROM
-              [Garware].[dbo].[master_set_production]
+              [RUNHOURS].[dbo].[master_set_production]
           `);
 
         // Combining results manually
@@ -2465,7 +2465,7 @@ app.post('/api/line_machine_construction_wholeday', async (req, res) => {
       .input('actualDate', sql.DateTime, actualDate)
       .query(`
         SELECT line_no, construction
-        FROM [Garware].[dbo].[atual_master_live]
+        FROM [RUNHOURS].[dbo].[atual_master_live]
         WHERE CONVERT(Date, shift_start) = @actualDate
           AND line_no = @line
           AND actual_machine_no = @machine
@@ -2480,7 +2480,7 @@ app.post('/api/line_machine_construction_wholeday', async (req, res) => {
     // Fetch meter_per_kg for the various constructions
     const query = `
       SELECT construction_name, meter_per_kg
-      FROM [Garware].[dbo].[master_construction_details]
+      FROM [RUNHOURS].[dbo].[master_construction_details]
       WHERE construction_name IN (${constructions})
     `;
 
@@ -2494,7 +2494,7 @@ app.post('/api/line_machine_construction_wholeday', async (req, res) => {
       .input('actualDate', sql.DateTime, actualDate)
       .query(`
         SELECT line_no, SUM(run_time) AS totalrun_time, SUM(final_live_count) as final_live_mtr, construction
-        FROM [Garware].[dbo].[atual_master_live]
+        FROM [RUNHOURS].[dbo].[atual_master_live]
         WHERE CONVERT(Date, shift_start) = @actualDate
           AND line_no = @line
           AND actual_machine_no = @machine
@@ -2578,7 +2578,7 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
         .input('actualDate', sql.DateTime, actualDate)
         .query(`
           SELECT line_no, construction
-          FROM [Garware].[dbo].[atual_master_live]
+          FROM [RUNHOURS].[dbo].[atual_master_live]
           WHERE CONVERT(Date, shift_start) = @actualDate
           GROUP BY line_no, construction
         `);
@@ -2591,7 +2591,7 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
       // Fetch meter_per_kg for the various constructions
       const query = `
         SELECT construction_name, meter_per_kg
-        FROM [Garware].[dbo].[master_construction_details]
+        FROM [RUNHOURS].[dbo].[master_construction_details]
         WHERE construction_name IN (${constructions})
       `;
 
@@ -2603,7 +2603,7 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
         .input('actualDate', sql.DateTime, actualDate)
         .query(`
           SELECT line_no, AVG(run_time) AS totalrun_time, SUM(final_live_count) AS final_live_mtr, construction
-          FROM [Garware].[dbo].[atual_master_live]
+          FROM [RUNHOURS].[dbo].[atual_master_live]
           WHERE CONVERT(Date, shift_start) = @actualDate 
           GROUP BY line_no, construction
         `);
@@ -2721,7 +2721,7 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
 //                   ORDER BY actual_date DESC
 //                 ) AS rn
 //               FROM 
-//                 [Garware].[dbo].[atual_master_live]
+//                 [RUNHOURS].[dbo].[atual_master_live]
 //               WHERE 
 //                 line_no = @Line AND 
 //                  CONVERT(Date, shift_start) = @actualDate
@@ -2732,7 +2732,7 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
 //                 SUM(final_live_count) AS totalLiveCount,
 //                 SUM(run_time) AS totalrun_time
 //               FROM
-//                 [Garware].[dbo].[atual_master_live]
+//                 [RUNHOURS].[dbo].[atual_master_live]
 //               WHERE
 //                 line_no = @Line AND 
 //                 CONVERT(Date, shift_start) = @actualDate
@@ -2746,7 +2746,7 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
 //     actual_machine_no,
 //     SUM(Target_in_mtr) AS totalTarget
 //   FROM
-//     [Garware].[dbo].[master_set_machine_target]
+//     [RUNHOURS].[dbo].[master_set_machine_target]
 //   WHERE
 //     line_no = @Line AND 
 //     CONVERT(Date, entry_date) = @actualDate
@@ -2841,7 +2841,7 @@ app.post('/api/run_hrs_Line_machine_wholeDay', async (req, res) => {
                 ORDER BY actual_date DESC
               ) AS rn
             FROM 
-              [Garware].[dbo].[atual_master_live]
+              [RUNHOURS].[dbo].[atual_master_live]
             WHERE 
               line_no = @Line AND 
               CONVERT(Date, shift_start) = @actualDate
@@ -2852,7 +2852,7 @@ app.post('/api/run_hrs_Line_machine_wholeDay', async (req, res) => {
               SUM(final_live_count) AS totalLiveCount,
               SUM(run_time) AS totalrun_time
             FROM
-              [Garware].[dbo].[atual_master_live]
+              [RUNHOURS].[dbo].[atual_master_live]
             WHERE
               line_no = @Line AND 
               CONVERT(Date, shift_start) = @actualDate
@@ -2864,7 +2864,7 @@ app.post('/api/run_hrs_Line_machine_wholeDay', async (req, res) => {
               machine_no AS actual_machine_no,
               SUM(Target_in_mtr) AS totalTarget
             FROM
-              [Garware].[dbo].[master_set_machine_target]
+              [RUNHOURS].[dbo].[master_set_machine_target]
             WHERE
               line_no = @Line  
             GROUP BY
@@ -2966,7 +2966,7 @@ app.post('/api/processMachineData', async (req, res) => {
       const line_check = await pool.request()
         .input('machine_number', sql.Int, machineId)
         .input('esp_no', sql.Int, Esp)
-        .query(`SELECT * FROM [Garware].[dbo].[mater_line_machine_esp] 
+        .query(`SELECT * FROM [RUNHOURS].[dbo].[mater_line_machine_esp] 
                 WHERE 
                     machine_number = @machine_number
                     AND esp_no = @esp_no`);
@@ -2986,7 +2986,7 @@ app.post('/api/processMachineData', async (req, res) => {
       const construction_check = await pool.request()
         .input('machine_no', sql.Int, actual_machine_no)
         .input('Line', sql.Int, line_check.recordset[0].line_number)
-        .query(`SELECT TOP 1 * FROM [Garware].[dbo].[master_set_production] 
+        .query(`SELECT TOP 1 * FROM [RUNHOURS].[dbo].[master_set_production] 
                 WHERE 
                     machine_no = @machine_no 
                     AND line_no = @Line
@@ -3004,7 +3004,7 @@ app.post('/api/processMachineData', async (req, res) => {
       const spoolCheck = await pool.request()
         .input('machine_no', sql.Int, machineId)
         .input('Line', sql.Int, line_check.recordset[0].line_number)
-        .query(`SELECT TOP 1 * FROM [Garware].[dbo].[master_set_production] 
+        .query(`SELECT TOP 1 * FROM [RUNHOURS].[dbo].[master_set_production] 
                 WHERE machine_no = @machine_no AND line_no = @Line 
                 ORDER BY sr_no DESC`);
 
@@ -3026,7 +3026,7 @@ app.post('/api/processMachineData', async (req, res) => {
         .input('line_no', sql.VarChar, line_check.recordset[0].line_number)
         .input('shift_start', sql.DateTime2, spoolDate)
         .query(`SELECT SUM(spool_count) AS spool_count
-                FROM [Garware].[dbo].[atual_master_live] 
+                FROM [RUNHOURS].[dbo].[atual_master_live] 
                 WHERE machine_no = @machine_no 
                   AND esp = @Esp
                   AND line_no = @line_no 
@@ -3046,7 +3046,7 @@ app.post('/api/processMachineData', async (req, res) => {
         .input('construction', sql.VarChar, construction_check.recordset[0].construction)
         .input('spool_count', sql.Float, spoolCount)
         .input('actual_date', sql.Date, actualDate)
-        .query(`INSERT INTO [Garware].[dbo].[spool_summary] 
+        .query(`INSERT INTO [RUNHOURS].[dbo].[spool_summary] 
                 (machine_no, line_no, Esp, shift_start, spool_count, construction) 
                 VALUES (@machine_no, @line_no, @Esp, @shift_start, @spool_count, @construction)`);
 
@@ -3058,7 +3058,7 @@ app.post('/api/processMachineData', async (req, res) => {
         .input('line_no', sql.VarChar, line_check.recordset[0].line_number)
         .input('Esp', sql.Int, Esp)
         .input('shift_start', sql.DateTime2, spoolDate)
-        .query(`UPDATE [Garware].[dbo].[atual_master_live]  
+        .query(`UPDATE [RUNHOURS].[dbo].[atual_master_live]  
                 SET spool_count = 0
                 WHERE machine_no = @machine_no 
                   AND esp = @Esp
@@ -3094,7 +3094,7 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
     // Select tea_time and lunch_time from shift_master table and subtract it from variable1
     const shiftData = await pool.request().query(`
       SELECT SUM(tea_time) AS tea_time, SUM(lunch_time) AS lunch_time
-      FROM [Garware].[dbo].[shift_master]
+      FROM [RUNHOURS].[dbo].[shift_master]
     `);
 
     console.log("variable1:", variable1);
@@ -3120,7 +3120,7 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
       // Calculate Performance
       const targetData = await pool.request().query(`
         SELECT SUM(Target_in_mtr) AS totalTarget
-        FROM [Garware].[dbo].[master_set_machine_target]
+        FROM [RUNHOURS].[dbo].[master_set_machine_target]
       `);
 
       if (targetData.recordset.length === 0) {
@@ -3137,7 +3137,7 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
         .input('date2', sql.DateTime, date2)
         .query(`
           SELECT SUM(final_live_count) AS totalLiveCount
-          FROM [Garware].[dbo].[atual_master_live]
+          FROM [RUNHOURS].[dbo].[atual_master_live]
           WHERE CONVERT(date, shift_start) >= @date1 
           AND CONVERT(date, shift_end) <= @date2
         `);
@@ -3210,7 +3210,7 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
     // Select tea_time and lunch_time from shift_master table and subtract it from variable1
     const shiftData = await pool.request().query(`
       SELECT SUM(tea_time) AS tea_time, SUM(lunch_time) AS lunch_time
-      FROM [Garware].[dbo].[shift_master]
+      FROM [RUNHOURS].[dbo].[shift_master]
     `);
 
     console.log("variable1:", variable1);
@@ -3237,7 +3237,7 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
         .input('Line', sql.Int, Line)
         .query(`
           SELECT SUM(Target_in_mtr) AS totalTarget
-          FROM [Garware].[dbo].[master_set_machine_target]
+          FROM [RUNHOURS].[dbo].[master_set_machine_target]
           WHERE line_no = @Line
         `);
 
@@ -3256,7 +3256,7 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
         .input('date2', sql.DateTime, date2)
         .query(`
           SELECT SUM(final_live_count) AS totalLiveCount
-          FROM [Garware].[dbo].[atual_master_live]
+          FROM [RUNHOURS].[dbo].[atual_master_live]
           WHERE CONVERT(date, shift_start) >= @date1 
           AND CONVERT(date, shift_end) <= @date2
           AND line_no = @Line
@@ -3348,7 +3348,7 @@ const verifyToken = (req, res, next) => {
 //     const shiftData = await pool.request()
 //       .query(`
 //         SELECT SUM(tea_time) AS tea_time, SUM(lunch_time) AS lunch_time
-//         FROM [Garware].[dbo].[shift_master]
+//         FROM [RUNHOURS].[dbo].[shift_master]
 //       `);
 
 //     console.log("variable1:", variable1);
@@ -3371,7 +3371,7 @@ const verifyToken = (req, res, next) => {
 //     .input('machine', sql.Int, machine)
 //       .query(`
 //         SELECT SUM(Target_in_mtr) AS totalTarget
-//         FROM [Garware].[dbo].[master_set_machine_target]
+//         FROM [RUNHOURS].[dbo].[master_set_machine_target]
 //         where line_no = @Line and machine_no = @machine
 //       `);
 
@@ -3391,7 +3391,7 @@ const verifyToken = (req, res, next) => {
 //       .input('machine', sql.Int, machine)
 //       .query(`
 //         SELECT SUM(final_live_count) AS totalLiveCount
-//         FROM [Garware].[dbo].[atual_master_live]
+//         FROM [RUNHOURS].[dbo].[atual_master_live]
 //         WHERE  CONVERT(date, shift_start) >= @date1 
 //         AND CONVERT(date, shift_end) <= @date2
 //         and line_no = @Line 
@@ -3457,7 +3457,7 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
     const shiftData = await pool.request()
       .query(`
         SELECT SUM(tea_time) AS tea_time, SUM(lunch_time) AS lunch_time
-        FROM [Garware].[dbo].[shift_master]
+        FROM [RUNHOURS].[dbo].[shift_master]
       `);
 
     console.log("variable1:", variable1);
@@ -3488,7 +3488,7 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
         .input('machine', sql.Int, machine)
         .query(`
           SELECT SUM(Target_in_mtr) AS totalTarget
-          FROM [Garware].[dbo].[master_set_machine_target]
+          FROM [RUNHOURS].[dbo].[master_set_machine_target]
           WHERE line_no = @Line AND machine_no = @machine
         `);
 
@@ -3514,7 +3514,7 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
         .input('machine', sql.Int, machine)
         .query(`
           SELECT SUM(final_live_count) AS totalLiveCount
-          FROM [Garware].[dbo].[atual_master_live]
+          FROM [RUNHOURS].[dbo].[atual_master_live]
           WHERE CONVERT(date, shift_start) >= @date1 
           AND CONVERT(date, shift_end) <= @date2
           AND line_no = @Line 
@@ -3605,7 +3605,7 @@ app.post('/api/wholeday_masterspool_target', async (req, res) => {
                 spool_target,
                 ROW_NUMBER() OVER (PARTITION BY machine_no ORDER BY start_time DESC) AS rn
             FROM 
-                [Garware].[dbo].[master_set_production]
+                [RUNHOURS].[dbo].[master_set_production]
             WHERE 
                 line_no = @line
           )
@@ -3617,7 +3617,7 @@ app.post('/api/wholeday_masterspool_target', async (req, res) => {
           FROM 
               RankedEntries RE
           LEFT JOIN 
-              [Garware].[dbo].[atual_master_live] AML
+              [RUNHOURS].[dbo].[atual_master_live] AML
           ON 
               RE.machine_no = AML.actual_machine_no 
               AND RE.line_no = AML.line_no 

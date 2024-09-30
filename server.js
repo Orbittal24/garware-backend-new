@@ -47,6 +47,16 @@ const dbConfig = {
    var dbconn = new sql.ConnectionPool(dbConfig)
 
 
+// Check if the connection is successful or failed
+dbconn.connect().then(() => {
+  console.log('Database connection successful!');
+}).catch(err => {
+  console.error('Database connection failed:', err);
+}).finally(() => {
+  // Close the connection when you're done, to avoid leaking connections
+  dbconn.close();
+});
+
 
 
 // Main array for Actual Run Time

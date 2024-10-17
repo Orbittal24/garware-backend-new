@@ -210,24 +210,44 @@ const adjustedLocalTimeISO = adjustedLocalTime.toISOString();
 
 console.log("Adjusted Local Time in ISO Format (IST):", adjustedLocalTimeISO);
 console.log("line.......:",Line)
-await pool.request()
+// await pool.request()
+//     .input('line_number', sql.VarChar, Line)
+//     .input('actual_machine_no', sql.Int, actual_machine_no)
+//     .input('machine_number', sql.VarChar, machineId)
+//     .input('esp_no', sql.VarChar, Esp)
+//     .input('status', sql.VarChar, 'online')
+//     .input('update_status_time', sql.DateTime2, adjustedLocalTimeISO) // Adjusted IST timestamp
+//     .query(`MERGE [RUNHOURS].[dbo].[master_machine_status] AS target
+//             USING (SELECT @line_number AS line_number, @machine_number AS machine_number, @esp_no AS esp_no, actual_machine_no) AS source
+//             ON target.line_number = source.line_number AND target.machine_number = source.machine_number AND target.esp_no = source.esp_no 
+//             WHEN MATCHED THEN
+//               UPDATE SET status = @status, update_status_time = @update_status_time
+//             WHEN NOT MATCHED THEN
+//               INSERT (line_number, machine_number, esp_no, status, update_status_time, actual_machine_no)
+//               VALUES (@line_number, @machine_number, @esp_no, @status, @update_status_time, @actual_machine_no);
+//     `);
+   
+    await pool.request()
     .input('line_number', sql.VarChar, Line)
     .input('actual_machine_no', sql.Int, actual_machine_no)
     .input('machine_number', sql.VarChar, machineId)
     .input('esp_no', sql.VarChar, Esp)
     .input('status', sql.VarChar, 'online')
     .input('update_status_time', sql.DateTime2, adjustedLocalTimeISO) // Adjusted IST timestamp
-    .query(`MERGE [RUNHOURS].[dbo].[master_machine_status] AS target
-            USING (SELECT @line_number AS line_number, @machine_number AS machine_number, @esp_no AS esp_no, actual_machine_no) AS source
-            ON target.line_number = source.line_number AND target.machine_number = source.machine_number AND target.esp_no = source.esp_no AND target.actual_machine_no = source.actual_machine_no
-            WHEN MATCHED THEN
-              UPDATE SET status = @status, update_status_time = @update_status_time
-            WHEN NOT MATCHED THEN
-              INSERT (line_number, machine_number, esp_no, status, update_status_time, actual_machine_no)
-              VALUES (@line_number, @machine_number, @esp_no, @status, @update_status_time, @actual_machine_no);
+    .query(`
+        MERGE [RUNHOURS].[dbo].[master_machine_status] AS target
+        USING (SELECT @line_number AS line_number, @machine_number AS machine_number, @esp_no AS esp_no, @actual_machine_no AS actual_machine_no) AS source
+        ON target.line_number = source.line_number 
+           AND target.machine_number = source.machine_number 
+           AND target.esp_no = source.esp_no 
+           AND target.actual_machine_no = source.actual_machine_no
+        WHEN MATCHED THEN
+            UPDATE SET status = @status, update_status_time = @update_status_time
+        WHEN NOT MATCHED THEN
+            INSERT (line_number, machine_number, esp_no, status, update_status_time, actual_machine_no)
+            VALUES (@line_number, @machine_number, @esp_no, @status, @update_status_time, @actual_machine_no);
     `);
-   
-             
+         
               
 
        

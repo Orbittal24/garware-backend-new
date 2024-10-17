@@ -218,8 +218,8 @@ await pool.request()
     .input('status', sql.VarChar, 'online')
     .input('update_status_time', sql.DateTime2, adjustedLocalTimeISO) // Adjusted IST timestamp
     .query(`MERGE [RUNHOURS].[dbo].[master_machine_status] AS target
-            USING (SELECT @line_number AS line_number, @machine_number AS machine_number, @esp_no AS esp_no) AS source
-            ON target.line_number = source.line_number AND target.machine_number = source.machine_number AND target.esp_no = source.esp_no
+            USING (SELECT @line_number AS line_number, @machine_number AS machine_number, @esp_no AS esp_no, actual_machine_no) AS source
+            ON target.line_number = source.line_number AND target.machine_number = source.machine_number AND target.esp_no = source.esp_no AND target.actual_machine_no = source.actual_machine_no
             WHEN MATCHED THEN
               UPDATE SET status = @status, update_status_time = @update_status_time
             WHEN NOT MATCHED THEN

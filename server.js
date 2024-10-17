@@ -1783,8 +1783,13 @@ app.post('/api/updateConstruction', async (req, res) => {
 
 
 
-// Conversion factor: 1 inch = 0.0254 meters
-const INCH_TO_METER = 0.0254;
+// // Conversion factor: 1 inch = 0.0254 meters
+// const INCH_TO_METER = 0.0254;
+// const PI = Math.PI;
+
+// Conversion factors
+const MM_TO_INCH = 1 / 25.4; // 1 mm = 0.0393701 inches
+const INCH_TO_METER = 0.0254; // 1 inch = 0.0254 meters
 const PI = Math.PI;
 
 // Calculate meters per pulse from pulley diameter
@@ -1805,11 +1810,22 @@ app.post('/api/calculate_target_mtr', async (req, res) => {
         throw new Error('Missing required fields');
       }
 
+
+ // Convert pulley diameter from mm to inches
+      const pulley_diameter_inches = pulley_diameter * MM_TO_INCH;
+
       // Calculate circumference in inches
-      const circumference_in_inches = PI * pulley_diameter;
+      const circumference_in_inches = PI * pulley_diameter_inches;
 
       // Convert circumference to meters
       const calculate_in_mtr = circumference_in_inches * INCH_TO_METER;
+
+      
+      // Calculate circumference in inches
+      // const circumference_in_inches = PI * pulley_diameter;
+
+      // Convert circumference to meters
+      // const calculate_in_mtr = circumference_in_inches * INCH_TO_METER;
 
       // Create a new request for each query
       const request = pool.request();

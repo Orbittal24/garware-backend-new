@@ -3120,6 +3120,7 @@ var lineeee = line_check.recordset[0].line_number;
   const result = await pool.request()
     .input('machine_no', sql.Int, actual_machine_no)
     .input('Esp', sql.Int, Esp)
+    .input('shift_start', sql.DateTime2, spoolDate)
     .input('line_no', sql.VarChar, line_check.recordset[0].line_number)
     .query(`SELECT spool_count 
             FROM [RUNHOURS].[dbo].[atual_master_live]

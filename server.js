@@ -3098,7 +3098,8 @@ app.post('/api/processMachineData', async (req, res) => {
                 VALUES (@machine_no, @line_no, @Esp, @shift_start, @spool_count, @construction)`);
 
       console.log(`Data inserted for machine ${machineId}`);
-
+var lineeee = line_check.recordset[0].line_number;
+      console.log("actual_machine_no:",actual_machine_no,lineeee, Esp,spoolDate,);
       // Reset the spool_count in atual_master_live table
       await pool.request()
         .input('machine_no', sql.Int, actual_machine_no)

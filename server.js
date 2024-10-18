@@ -2648,7 +2648,7 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
       const liveCountData = await pool.request()
         .input('actualDate', sql.DateTime, actualDate)
         .query(`
-          SELECT line_no, AVG(run_time) AS totalrun_time, SUM(final_live_count) AS final_live_mtr, construction
+          SELECT line_no, AVG(run_time) AS totalrun_time, SUM(run_time) AS run_time, SUM(final_live_count) AS final_live_mtr, construction
           FROM [RUNHOURS].[dbo].[atual_master_live]
           WHERE CONVERT(Date, shift_start) = @actualDate 
           GROUP BY line_no, construction
@@ -2691,7 +2691,8 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
           ...record,
           run_time_minutes: runTimeInMinutes,
           run_time_hours: runTimeInHours,
-          final_live_kg: final_live_kg
+          final_live_kg: final_live_kg,
+          run_time: record.run_time // 
         };
       });
 

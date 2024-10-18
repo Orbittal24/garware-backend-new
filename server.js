@@ -2648,7 +2648,7 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
       const liveCountData = await pool.request()
         .input('actualDate', sql.DateTime, actualDate)
         .query(`
-          SELECT line_no, AVG(run_time) AS totalrun_time, SUM(run_time) AS run_time, SUM(final_live_count) AS final_live_mtr, construction
+          SELECT line_no, SUM(run_time) AS run_time, SUM(final_live_count) AS final_live_mtr, construction
           FROM [RUNHOURS].[dbo].[atual_master_live]
           WHERE CONVERT(Date, shift_start) = @actualDate 
           GROUP BY line_no, construction
@@ -2681,7 +2681,7 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
           console.warn(`Meter per kg not found for construction: ${record.construction}`);
         }
 
-        const runTimeInSeconds = record.totalrun_time;
+        const runTimeInSeconds = record.run_time;
         const runTimeInMinutes = typeof runTimeInSeconds === 'number' && !isNaN(runTimeInSeconds)
           ? Math.floor(runTimeInSeconds / 60)
           : 0;

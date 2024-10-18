@@ -3086,7 +3086,7 @@ app.post('/api/processMachineData', async (req, res) => {
 
       // Insert the spool_count and actual_date into spool_summary table
       await pool.request()
-        .input('machine_no', sql.Int, machineId)
+        .input('machine_no', sql.Int, actual_machine_no)
         .input('line_no', sql.Int, line_check.recordset[0].line_number)
         .input('Esp', sql.Int, Esp)
         .input('shift_start', sql.DateTime2, spoolDate)
@@ -3102,7 +3102,7 @@ var lineeee = line_check.recordset[0].line_number;
       console.log("actual_machine_no:",actual_machine_no,lineeee, Esp,spoolDate,);
       // Reset the spool_count in atual_master_live table
       await pool.request()
-        .input('machine_no', sql.Int, actual_machine_no)
+        .input('machine_no', sql.Int, machineId)
         .input('line_no', sql.VarChar, line_check.recordset[0].line_number)
         .input('Esp', sql.Int, Esp)
         .input('shift_start', sql.DateTime2, spoolDate)

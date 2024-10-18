@@ -72,7 +72,7 @@ const previousPulseCounts = {}; // { machineId: { pulseCount: number, startTime:
 
 let machineData = [];
 // for data receive from ESP and perform operation on actual_master_live database table
-app.post('/api/data', async (req, res) => {
+app.post('/api/dataa', async (req, res) => {
   if (req.method !== 'POST') {
       return res.status(405).json({ message: 'Only POST requests allowed' });
   }

@@ -3115,6 +3115,31 @@ var lineeee = line_check.recordset[0].line_number;
 
       console.log(`Spool count reset for machine ${machineId}`);
 
+
+ // Now select to check if the update was successful
+  const result = await pool.request()
+    .input('machine_no', sql.Int, actual_machine_no)
+    .input('Esp', sql.Int, Esp)
+    .input('line_no', sql.VarChar, line_check.recordset[0].line_number)
+    .query(`SELECT spool_count 
+            FROM [RUNHOURS].[dbo].[atual_master_live]
+            WHERE machine_no = @machine_no 
+              AND esp = @Esp
+              AND line_no = @line_no 
+              AND shift_start >= @shift_start`);
+
+  // Check if the spool_count is updated to 0
+  if (result.recordset.length > 0) {
+    const updatedCount = result.recordset[0].spool_count;
+    if (updatedCount === 0) {
+      console.log('Update successful: spool_count is now 0.');
+    } else {
+      console.log(`Update failed: spool_count is still ${updatedCount}.`);
+    }
+  } else {
+    console.log('No records found after update.');
+  }
+      
       // Add the processed machineId to the array
       processedMachineIds.push(machineId);
     }

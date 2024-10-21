@@ -3667,6 +3667,8 @@ app.post('/api/wholeday_masterspool_target', async (req, res) => {
     for (const data of dataArray) {
       const { line, actualdate } = data;
 
+
+        // ISNULL(SUM(AML.spool_count), 0) AS totalLiveCount
       // Combined query without construction-wise grouping
       const combinedData = await pool.request()
         .input('line', sql.Int, line)
@@ -3677,6 +3679,7 @@ app.post('/api/wholeday_masterspool_target', async (req, res) => {
                 line_no,
                 machine_no,
                 spool_target,
+                 spool_date,
                 ROW_NUMBER() OVER (PARTITION BY machine_no ORDER BY start_time DESC) AS rn
             FROM 
                 [RUNHOURS].[dbo].[master_set_production]
@@ -3687,7 +3690,16 @@ app.post('/api/wholeday_masterspool_target', async (req, res) => {
               RE.line_no,
               RE.machine_no,
               RE.spool_target,
-              ISNULL(SUM(AML.spool_count), 0) AS totalLiveCount
+            ISNULL(
+        (
+          SELECT SUM(AML.spool_count) 
+          FROM [RUNHOURS].[dbo].[atual_master_live] AML
+          WHERE 
+              RE.machine_no = AML.actual_machine_no 
+              AND RE.line_no = AML.line_no 
+              AND AML.actual_date >= RE.spool_date
+        ), 0
+      ) AS totalLiveCount
           FROM 
               RankedEntries RE
           LEFT JOIN 

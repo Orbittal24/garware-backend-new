@@ -2969,7 +2969,7 @@ app.post('/api/run_hrs_Line_machine_wholeDay', async (req, res) => {
 
         return {
             ...record,
-            run_time: formattedRunTime // Add the formatted time to the record
+            run_time_hours: formattedRunTime // Add the formatted time to the record
         };
     });
 

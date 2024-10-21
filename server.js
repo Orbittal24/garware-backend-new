@@ -3077,7 +3077,7 @@ app.post('/api/processMachineData', async (req, res) => {
                 WHERE machine_no = @machine_no 
                   AND esp = @Esp
                   AND line_no = @line_no 
-                  AND shift_start >= @shift_start`);
+                  AND actual_date >= @shift_start`);
 
       const spoolCount = liveCountResult.recordset[0].spool_count;
       const actualDate = liveCountResult.recordset[0]?.actual_date;

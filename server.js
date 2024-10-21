@@ -3679,7 +3679,7 @@ app.post('/api/wholeday_masterspool_target', async (req, res) => {
                 line_no,
                 machine_no,
                 spool_target,
-                 spool_date,
+                 start_time,
                 ROW_NUMBER() OVER (PARTITION BY machine_no ORDER BY start_time DESC) AS rn
             FROM 
                 [RUNHOURS].[dbo].[master_set_production]
@@ -3697,7 +3697,7 @@ app.post('/api/wholeday_masterspool_target', async (req, res) => {
           WHERE 
               RE.machine_no = AML.actual_machine_no 
               AND RE.line_no = AML.line_no 
-              AND AML.actual_date >= RE.spool_date
+              AND AML.actual_date >= RE.start_time
         ), 0
       ) AS totalLiveCount
           FROM 

@@ -813,7 +813,7 @@ console.log("actual mtr final:",actual.spool_count)
                             WHERE machine_no = @machine_no 
                               AND esp = @Esp
                               AND line_no = @line_no 
-                              AND shift_start >= @shift_start
+                              AND actual_date  >= @shift_start
 
                           `);
 

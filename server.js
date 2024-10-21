@@ -2932,20 +2932,46 @@ app.post('/api/run_hrs_Line_machine_wholeDay', async (req, res) => {
           WHERE le.rn = 1;
         `);
 
-      if (liveCountData.recordset.length > 0) {
-        const processedData = liveCountData.recordset.map(record => {
-          const runTimeInSeconds = record.totalrun_time;
-          const runTimeInMinutes = typeof runTimeInSeconds === 'number' && !isNaN(runTimeInSeconds)
-            ? Math.floor(runTimeInSeconds / 60)
-            : 0;
-          const runTimeInHours = runTimeInMinutes / 60;
+      // if (liveCountData.recordset.length > 0) {
+      //   const processedData = liveCountData.recordset.map(record => {
+      //     const runTimeInSeconds = record.totalrun_time;
+      //     const runTimeInMinutes = typeof runTimeInSeconds === 'number' && !isNaN(runTimeInSeconds)
+      //       ? Math.floor(runTimeInSeconds / 60)
+      //       : 0;
+      //     const runTimeInHours = runTimeInMinutes / 60;
 
-          return {
+      //     return {
+      //       ...record,
+      //       run_time_minutes: runTimeInMinutes,
+      //       run_time_hours: runTimeInHours.toFixed(2)
+      //     };
+      //   });
+
+      if (liveCountData.recordset.length > 0) {
+    const processedData = liveCountData.recordset.map(record => {
+        const runTimeInSeconds = record.totalrun_time;
+
+        // Initialize hours, minutes, and seconds
+        let hours = 0;
+        let minutes = 0;
+        let seconds = 0;
+
+        // Check if runTimeInSeconds is a valid number
+        if (typeof runTimeInSeconds === 'number' && !isNaN(runTimeInSeconds)) {
+            // Calculate hours, minutes, and seconds
+            hours = Math.floor(runTimeInSeconds / 3600);
+            minutes = Math.floor((runTimeInSeconds % 3600) / 60);
+            seconds = Math.floor(runTimeInSeconds % 60);
+        }
+
+        // Format as "HR:MIN:SEC"
+        const formattedRunTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+        return {
             ...record,
-            run_time_minutes: runTimeInMinutes,
-            run_time_hours: runTimeInHours.toFixed(2)
-          };
-        });
+            run_time: formattedRunTime // Add the formatted time to the record
+        };
+    });
 
         results.push({
           line: Line,

@@ -732,7 +732,7 @@ const atual_master_live_count = await pool.request()
           WHERE machine_no = @machine_no 
          AND esp = @Esp
             AND line_no = @line_no 
-            AND shift_start >= @shift_start 
+            AND actual_date >= @shift_start 
            `);
 
 //  .query( `SELECT SUM(live_count) AS live_count

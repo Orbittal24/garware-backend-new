@@ -3690,16 +3690,12 @@ app.post('/api/wholeday_masterspool_target', async (req, res) => {
               RE.line_no,
               RE.machine_no,
               RE.spool_target,
-            ISNULL(
-        (
-          SELECT SUM(AML.spool_count) 
-          FROM [RUNHOURS].[dbo].[atual_master_live] AML
-          WHERE 
-              RE.machine_no = AML.actual_machine_no 
-              AND RE.line_no = AML.line_no 
-              AND AML.actual_date >= RE.start_time
-        ), 0
-      ) AS totalLiveCount
+              ISNULL(SUM(
+        CASE 
+            WHEN  AML.actual_date >= RE.start_time THEN AML.spool_count 
+            ELSE 0 
+        END
+    ), 0) AS totalLiveCount
           FROM 
               RankedEntries RE
           LEFT JOIN 

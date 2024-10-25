@@ -176,7 +176,8 @@ const spool_check = await pool.request()
 .query(`SELECT TOP 1 * FROM [RUNHOURS].[dbo].[master_set_production] 
         WHERE 
             machine_no = @machine_no AND
-            line_no = @Line
+            line_no = @Line AND
+             start_time <= GETDATE()
              ORDER BY sr_no DESC
             `);
 

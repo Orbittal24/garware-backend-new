@@ -3711,7 +3711,8 @@ app.post('/api/wholeday_masterspool_target', async (req, res) => {
             FROM 
                 [RUNHOURS].[dbo].[master_set_production]
             WHERE 
-                line_no = @line
+                line_no = @line AND
+                 start_time <= GETDATE()
           )
           SELECT 
               RE.line_no,

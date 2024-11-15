@@ -804,20 +804,20 @@ console.log("actual mtr final:",actual.spool_count)
                           // messages.push(`Target for machine ${machineId} is completed in shift ${currentShift.shift_no}, Line: ${Line}, ESP: ${Esp}.`);
                           messages.push(`Target for machine ${machineId} is completed`);
                          
-                            await pool.request()
-                          .input('machine_no', sql.Int, machineId)
-                          .input('line_no', sql.VarChar, Line)
-                          .input('Esp', sql.Int, Esp)
-                          .input('shift_start', sql.DateTime2, spool_date)
-                          .query(`
-                            UPDATE [RUNHOURS].[dbo].[atual_master_live]
-                            SET spool_count = 0
-                            WHERE machine_no = @machine_no 
-                              AND esp = @Esp
-                              AND line_no = @line_no 
-                              AND actual_date  >= @shift_start
+                          //   await pool.request()
+                          // .input('machine_no', sql.Int, machineId)
+                          // .input('line_no', sql.VarChar, Line)
+                          // .input('Esp', sql.Int, Esp)
+                          // .input('shift_start', sql.DateTime2, spool_date)
+                          // .query(`
+                          //   UPDATE [RUNHOURS].[dbo].[atual_master_live]
+                          //   SET spool_count = 0
+                          //   WHERE machine_no = @machine_no 
+                          //     AND esp = @Esp
+                          //     AND line_no = @line_no 
+                          //     AND actual_date  >= @shift_start
 
-                          `);
+                          // `);
 
 
 
@@ -3112,9 +3112,9 @@ app.post('/api/processMachineData', async (req, res) => {
 
       console.log(`Spool Count: ${spoolCount}, Actual Date: ${actualDate}`);
 
-      // Insert the spool_count and actual_date into spool_summary table
+// Insert the spool_count and actual_date into spool_summary table
       await pool.request()
-        .input('machine_no', sql.Int, actual_machine_no)
+        .input('machine_no', sql.Int, machineId)
         .input('line_no', sql.Int, line_check.recordset[0].line_number)
         .input('Esp', sql.Int, Esp)
         .input('shift_start', sql.DateTime2, spoolDate)
@@ -3124,6 +3124,19 @@ app.post('/api/processMachineData', async (req, res) => {
         .query(`INSERT INTO [RUNHOURS].[dbo].[spool_summary] 
                 (machine_no, line_no, Esp, shift_start, spool_count, construction) 
                 VALUES (@machine_no, @line_no, @Esp, @shift_start, @spool_count, @construction)`);
+      
+      // Insert the spool_count and actual_date into spool_summary table
+      // await pool.request()
+      //   .input('machine_no', sql.Int, actual_machine_no)
+      //   .input('line_no', sql.Int, line_check.recordset[0].line_number)
+      //   .input('Esp', sql.Int, Esp)
+      //   .input('shift_start', sql.DateTime2, spoolDate)
+      //   .input('construction', sql.VarChar, construction_check.recordset[0].construction)
+      //   .input('spool_count', sql.Float, spoolCount)
+      //   .input('actual_date', sql.Date, actualDate)
+      //   .query(`INSERT INTO [RUNHOURS].[dbo].[spool_summary] 
+      //           (machine_no, line_no, Esp, shift_start, spool_count, construction) 
+      //           VALUES (@machine_no, @line_no, @Esp, @shift_start, @spool_count, @construction)`);
 
       console.log(`Data inserted for machine ${machineId}`);
 var lineeee = line_check.recordset[0].line_number;

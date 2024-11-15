@@ -772,7 +772,7 @@ console.log("calculatedMasterPulse", masterPulseValue);
 if (atual_master_live_count1[0].live_count >= masterPulseValue) {
 
   // Log or push a message to indicate target completion
-  messages.push(`Target for machine ${machineId} is completed in shift ${currentShift.shift_no}, Line: ${Line}, ESP: ${Esp}.`);
+  // messages.push(`Target for machine ${machineId} is completed in shift ${currentShift.shift_no}, Line: ${Line}, ESP: ${Esp}.`);
 
   // Reset live_count to 0 in the database for the specific machine and shift
   await pool.request()

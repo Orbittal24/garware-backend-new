@@ -794,7 +794,7 @@ if (atual_master_live_count1[0].live_count >= masterPulseValue) {
 
 const actual = checklivecountmtr.recordset[0];
 console.log("spool target final:",spool)
-console.log("actual mtr final:",actual.spool_count)
+console.log("actual mtr final:",actual.spool_count,"actual_machine_no:::::::::::::::",actual_machine_no)
                   if (spool > 0) {
                     
                       const actual = checklivecountmtr.recordset[0];

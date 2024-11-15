@@ -765,7 +765,7 @@ atual_master_live_count1.push(atual_master_live_countValue); //
 // Ensure masterPulse is compared as a number, not as an array
 let masterPulseValue = masterPulse[0]; // Extract the first value from the array if it's always a single value
 
-console.log("live count", atual_master_live_count1[0].live_count);
+console.log("live count", atual_master_live_count1[0].live_count,"actual_machine_no============",actual_machine_no);
 console.log("calculatedMasterPulse", masterPulseValue);
 
 // Check the condition using the actual masterPulse value

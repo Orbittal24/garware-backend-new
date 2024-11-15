@@ -321,7 +321,7 @@ if (currentShift) {
   console.log('Shift End Date Formatted:', shiftEndDateISO);
 
   console.log("Line",Line)
-  console.log("actual_machine_no",actual_machine_no)
+  // console.log("actual_machine_no",actual_machine_no)
 // Get the calculated_in_mtr value from master_set_machine_target
 const targetResult = await pool.request()
 .input('line_no', sql.Int, Line)

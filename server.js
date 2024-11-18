@@ -3869,6 +3869,94 @@ app.post('/api/selectSpools_linewise', async (req, res) => {
   }
 });
 
+
+
+app.post('/api/selectSpools_machinewise', async (req, res) => {
+  const { lineNo, current_date_time, machineNo } = req.body;
+
+  // Validate that lineNo, current_date_time, and machineNo are provided
+  if (!lineNo || !current_date_time || !machineNo) {
+    return res.status(400).json({ error: "lineNo, current_date_time, and machineNo are required" });
+  }
+
+  try {
+    // Connect to the database
+    await sql.connect(dbConfig);
+
+    // 1st Query: Select latest unique entries from master_set_production for the given lineNo and machineNo
+    const resultMasterSet = await sql.query`
+      WITH LatestMachines AS (
+        SELECT 
+          line_no, 
+          machine_no, 
+          construction, 
+          start_time, 
+          spool_target,
+          ROW_NUMBER() OVER (PARTITION BY machine_no ORDER BY start_time DESC) AS rn
+        FROM [RUNHOURS].[dbo].[master_set_production]
+        WHERE line_no = ${lineNo} AND machine_no = ${machineNo}
+      )
+      SELECT 
+        line_no, 
+        machine_no, 
+        construction, 
+        start_time, 
+        spool_target
+      FROM LatestMachines
+      WHERE rn = 1`;
+
+    const latestEntries = resultMasterSet.recordset;
+
+    if (latestEntries.length === 0) {
+      return res.status(404).json({ message: "No entries found for the given lineNo and machineNo" });
+    }
+
+    // Prepare an array to hold spool summary results per machine
+    const spoolSummaryResults = [];
+
+    // Loop through the latest entries and fetch spool data for each machine
+    for (let entry of latestEntries) {
+      const start_time = entry.start_time;
+
+      // 2nd Query: Select spool_summary data for each machine with actual_date >= start_time and actual_date <= current_date_time
+      const resultSpoolSummary = await sql.query`
+        SELECT 
+          machine_no, 
+          line_no, 
+          Esp, 
+          shift_start, 
+          spool_count, 
+          actual_date, 
+          construction, 
+          SUM(spools) AS total_spools
+        FROM [RUNHOURS].[dbo].[spool_summary] 
+        WHERE line_no = ${lineNo} 
+          AND machine_no = ${machineNo}
+          AND actual_date >= ${start_time} 
+          AND actual_date <= ${current_date_time}
+        GROUP BY machine_no, line_no, Esp, shift_start, spool_count, actual_date, construction`;
+
+      // Push results to spoolSummaryResults
+      spoolSummaryResults.push({
+        machine_no: entry.machine_no,
+        spool_summary: resultSpoolSummary.recordset
+      });
+    }
+
+    // Return the spool summary data grouped by machine
+    return res.json({
+      spool_summary: spoolSummaryResults
+    });
+
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).json({ error: "An error occurred while fetching data." });
+  } finally {
+    await sql.close(); // Close the SQL connection
+  }
+});
+
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server is running on http://IP:${port}`);

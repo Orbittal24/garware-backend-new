@@ -3114,7 +3114,7 @@ app.post('/api/processMachineData', async (req, res) => {
 
 // Insert the spool_count and actual_date into spool_summary table
       await pool.request()
-        .input('machine_no', sql.Int, machineId)
+        .input('machine_no', sql.Int, actual_machine_no)
         .input('line_no', sql.Int, line_check.recordset[0].line_number)
         .input('Esp', sql.Int, Esp)
         .input('shift_start', sql.DateTime2, spoolDate)

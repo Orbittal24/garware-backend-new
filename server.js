@@ -3833,7 +3833,7 @@ app.post('/api/selectSpools_linewise', async (req, res) => {
       SELECT 
         machine_no, 
         line_no, 
-        Esp, 
+      
         shift_start, 
         spool_count, 
         actual_date, 
@@ -3843,13 +3843,13 @@ app.post('/api/selectSpools_linewise', async (req, res) => {
       WHERE line_no = ${lineNo} 
       AND actual_date >= ${start_time} 
       AND actual_date <= ${current_date_time}
-      GROUP BY machine_no, line_no, Esp, shift_start, spool_count, actual_date, construction`;
+      GROUP BY machine_no, line_no, shift_start, spool_count, actual_date, construction`;
 
       // AND actual_date <= ${current_date_time}
       
     // Push results to spoolSummaryResults
     spoolSummaryResults.push({
-      machine_no: entry.machine_no,
+      // machine_no: entry.machine_no,
       spool_summary: resultSpoolSummary.recordset
     });
   }
@@ -3923,7 +3923,7 @@ app.post('/api/selectSpools_machinewise', async (req, res) => {
         SELECT 
           machine_no, 
           line_no, 
-          Esp, 
+         
           shift_start, 
           spool_count, 
           actual_date, 
@@ -3934,11 +3934,11 @@ app.post('/api/selectSpools_machinewise', async (req, res) => {
           AND machine_no = ${machineNo}
           AND actual_date >= ${start_time} 
           AND actual_date <= ${current_date_time}
-        GROUP BY machine_no, line_no, Esp, shift_start, spool_count, actual_date, construction`;
+        GROUP BY machine_no, line_no,  shift_start, spool_count, actual_date, construction`;
 
       // Push results to spoolSummaryResults
       spoolSummaryResults.push({
-        machine_no: entry.machine_no,
+        // machine_no: entry.machine_no,
         spool_summary: resultSpoolSummary.recordset
       });
     }

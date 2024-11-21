@@ -3781,10 +3781,119 @@ app.post('/api/wholeday_masterspool_target', async (req, res) => {
 
 
 
-// FOR SPOOLS COUNT
+// // FOR SPOOLS COUNT
+// app.post('/api/selectSpools_linewise', async (req, res) => {
+//   const { lineNo, current_date_time } = req.body;
+// console.log("received body ",req.body)
+//   if (!lineNo || !current_date_time) {
+//     return res.status(400).json({ error: "lineNo and current_date_time are required" });
+//   }
+
+//   try {
+//     // Connect to the database
+//     await sql.connect(dbConfig);
+
+//     // 1st Query: Select latest unique entries from master_set_production for the given lineNo
+//     const resultMasterSet = await sql.query`
+//       WITH LatestMachines AS (
+//         SELECT 
+//           line_no, 
+//           machine_no, 
+//           construction, 
+//           start_time, 
+//           spool_target,
+//           ROW_NUMBER() OVER (PARTITION BY machine_no ORDER BY start_time DESC) AS rn
+//         FROM [RUNHOURS].[dbo].[master_set_production]
+//         WHERE line_no = ${lineNo}
+//       )
+//       SELECT 
+//         line_no, 
+//         machine_no, 
+//         construction, 
+//         start_time, 
+//         spool_target
+//       FROM LatestMachines
+//       WHERE rn = 1`;
+
+//     const latestEntries = resultMasterSet.recordset;
+
+//     if (latestEntries.length === 0) {
+//       return res.status(404).json({ message: "No entries found for the given lineNo" });
+//     }
+
+//     // Prepare an array to hold spool summary results per machine
+//     const spoolSummaryResults = [];
+
+//     // Loop through the latest entries and fetch spool data for each machine
+//     for (let entry of latestEntries) {
+//       const start_time = entry.start_time;
+//         const machine_no = entry.machine_no;
+// console.log("start time of construction ",start_time,lineNo,current_date_time,machine_no)
+//       // 2nd Query: Select spool_summary data for each machine with actual_date >= start_time and actual_date <= current_date_time
+//       const resultSpoolSummary = await sql.query`
+//    SELECT 
+//     machine_no, 
+//     line_no, 
+//     MIN(shift_start) AS shift_start, 
+//     SUM(spool_count) AS spool_count,
+//     actual_date, 
+//     construction, 
+//     SUM(spools) AS total_spools
+// FROM [RUNHOURS].[dbo].[spool_summary] 
+// WHERE line_no = ${lineNo} 
+//   AND machine_no = ${machine_no}
+//   AND actual_date >= ${start_time} 
+//   AND actual_date <= ${current_date_time}
+// GROUP BY machine_no, line_no, actual_date, construction`;
+
+//       // SELECT 
+//       //   machine_no, 
+//       //   line_no, 
+      
+//       //   shift_start, 
+//       //   spool_count, 
+//       //   actual_date, 
+//       //   construction, 
+//       //   SUM(spools) AS total_spools
+//       // FROM [RUNHOURS].[dbo].[spool_summary] 
+//       // WHERE line_no = ${lineNo} 
+//       //   AND machine_no = ${machine_no}
+//       // AND actual_date >= ${start_time} 
+    
+//       // AND actual_date <= ${current_date_time}
+//       // GROUP BY machine_no, line_no, shift_start, spool_count, actual_date, construction`;
+
+   
+      
+//     // Push results to spoolSummaryResults
+//     spoolSummaryResults.push({
+//       // machine_no: entry.machine_no,
+//       spool_summary: resultSpoolSummary.recordset
+//     });
+//   }
+        
+     
+
+//     // Return the spool summary data grouped by machine
+//     return res.json({
+//       spool_summary: spoolSummaryResults
+//     });
+
+//   } catch (error) {
+//     console.error('Error:', error);
+//     return res.status(500).json({ error: "An error occurred while fetching data." });
+//   } finally {
+//     await sql.close(); // Close the SQL connection
+//   }
+// });
+
+
 app.post('/api/selectSpools_linewise', async (req, res) => {
   const { lineNo, current_date_time } = req.body;
-console.log("received body ",req.body)
+
+  console.log("Received body:", req.body);
+
+  // Validate required fields
   if (!lineNo || !current_date_time) {
     return res.status(400).json({ error: "lineNo and current_date_time are required" });
   }
@@ -3793,7 +3902,7 @@ console.log("received body ",req.body)
     // Connect to the database
     await sql.connect(dbConfig);
 
-    // 1st Query: Select latest unique entries from master_set_production for the given lineNo
+    // Query 1: Get the latest unique entries for each machine in the given line
     const resultMasterSet = await sql.query`
       WITH LatestMachines AS (
         SELECT 
@@ -3817,76 +3926,71 @@ console.log("received body ",req.body)
 
     const latestEntries = resultMasterSet.recordset;
 
+    // Check if there are any entries
     if (latestEntries.length === 0) {
       return res.status(404).json({ message: "No entries found for the given lineNo" });
     }
 
-    // Prepare an array to hold spool summary results per machine
+    // Array to hold spool summary results
     const spoolSummaryResults = [];
 
     // Loop through the latest entries and fetch spool data for each machine
     for (let entry of latestEntries) {
-      const start_time = entry.start_time;
-        const machine_no = entry.machine_no;
-console.log("start time of construction ",start_time,lineNo,current_date_time,machine_no)
-      // 2nd Query: Select spool_summary data for each machine with actual_date >= start_time and actual_date <= current_date_time
+      const { start_time, machine_no } = entry;
+
+      console.log(
+        "Fetching spool summary for:",
+        { lineNo, machine_no, start_time, current_date_time }
+      );
+
+      // Query 2: Fetch spool summary data
       const resultSpoolSummary = await sql.query`
-   SELECT 
-    machine_no, 
-    line_no, 
-    MIN(shift_start) AS shift_start, 
-    SUM(spool_count) AS spool_count,
-    actual_date, 
-    construction, 
-    SUM(spools) AS total_spools
-FROM [RUNHOURS].[dbo].[spool_summary] 
-WHERE line_no = ${lineNo} 
-  AND machine_no = ${machine_no}
-  AND actual_date >= ${start_time} 
-  AND actual_date <= ${current_date_time}
-GROUP BY machine_no, line_no, actual_date, construction`;
+        SELECT 
+          machine_no, 
+          line_no, 
+          MIN(shift_start) AS shift_start, 
+          SUM(spool_count) AS spool_count,
+          MAX(actual_date) AS actual_date, 
+          construction, 
+          SUM(spools) AS total_spools
+        FROM [RUNHOURS].[dbo].[spool_summary] 
+        WHERE line_no = ${lineNo} 
+          AND machine_no = ${machine_no}
+          AND actual_date >= ${start_time} 
+          AND actual_date <= ${current_date_time}
+        GROUP BY machine_no, line_no, construction`;
 
-      // SELECT 
-      //   machine_no, 
-      //   line_no, 
-      
-      //   shift_start, 
-      //   spool_count, 
-      //   actual_date, 
-      //   construction, 
-      //   SUM(spools) AS total_spools
-      // FROM [RUNHOURS].[dbo].[spool_summary] 
-      // WHERE line_no = ${lineNo} 
-      //   AND machine_no = ${machine_no}
-      // AND actual_date >= ${start_time} 
-    
-      // AND actual_date <= ${current_date_time}
-      // GROUP BY machine_no, line_no, shift_start, spool_count, actual_date, construction`;
+      // Check if the query returned results
+      if (resultSpoolSummary.recordset.length > 0) {
+        spoolSummaryResults.push({
+          spool_summary: resultSpoolSummary.recordset
+        });
+      } else {
+        // If no results, push an empty summary
+        spoolSummaryResults.push({
+          spool_summary: []
+        });
+      }
+    }
 
-   
-      
-    // Push results to spoolSummaryResults
-    spoolSummaryResults.push({
-      // machine_no: entry.machine_no,
-      spool_summary: resultSpoolSummary.recordset
-    });
-  }
-        
-     
+    // Filter out empty spool summaries before returning the response
+    const filteredResults = spoolSummaryResults.filter(
+      entry => entry.spool_summary.length > 0
+    );
 
-    // Return the spool summary data grouped by machine
+    // Return the final response
     return res.json({
-      spool_summary: spoolSummaryResults
+      spool_summary: filteredResults
     });
-
   } catch (error) {
-    console.error('Error:', error);
+    // Log and return error
+    console.error("Error occurred:", error);
     return res.status(500).json({ error: "An error occurred while fetching data." });
   } finally {
-    await sql.close(); // Close the SQL connection
+    // Ensure the SQL connection is closed
+    await sql.close();
   }
 });
-
 
 
 app.post('/api/selectSpools_machinewise', async (req, res) => {

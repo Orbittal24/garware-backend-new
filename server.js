@@ -3842,7 +3842,9 @@ console.log("start time of construction ",start_time,lineNo,current_date_time,ma
         SUM(spools) AS total_spools
       FROM [RUNHOURS].[dbo].[spool_summary] 
       WHERE line_no = ${lineNo} 
+        AND machine_no = ${machine_no}
       AND actual_date >= ${start_time} 
+    
       AND actual_date <= ${current_date_time}
       GROUP BY machine_no, line_no, shift_start, spool_count, actual_date, construction`;
 

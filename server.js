@@ -3784,7 +3784,7 @@ app.post('/api/wholeday_masterspool_target', async (req, res) => {
 // FOR SPOOLS COUNT
 app.post('/api/selectSpools_linewise', async (req, res) => {
   const { lineNo, current_date_time } = req.body;
-
+console.log("received body ",req.body)
   if (!lineNo || !current_date_time) {
     return res.status(400).json({ error: "lineNo and current_date_time are required" });
   }
@@ -3827,7 +3827,7 @@ app.post('/api/selectSpools_linewise', async (req, res) => {
     // Loop through the latest entries and fetch spool data for each machine
     for (let entry of latestEntries) {
       const start_time = entry.start_time;
-
+console.log("start time of construction ",start_time,lineNo,current_date_time)
       // 2nd Query: Select spool_summary data for each machine with actual_date >= start_time and actual_date <= current_date_time
       const resultSpoolSummary = await sql.query`
       SELECT 
@@ -3873,7 +3873,7 @@ app.post('/api/selectSpools_linewise', async (req, res) => {
 
 app.post('/api/selectSpools_machinewise', async (req, res) => {
   const { lineNo, current_date_time, machineNo } = req.body;
-
+console.log("received body",  req.body)
   // Validate that lineNo, current_date_time, and machineNo are provided
   if (!lineNo || !current_date_time || !machineNo) {
     return res.status(400).json({ error: "lineNo, current_date_time, and machineNo are required" });
@@ -3917,7 +3917,8 @@ app.post('/api/selectSpools_machinewise', async (req, res) => {
     // Loop through the latest entries and fetch spool data for each machine
     for (let entry of latestEntries) {
       const start_time = entry.start_time;
-
+console.log("start time of construction ",start_time,lineNo,machineNo,current_date_time)
+      
       // 2nd Query: Select spool_summary data for each machine with actual_date >= start_time and actual_date <= current_date_time
       const resultSpoolSummary = await sql.query`
         SELECT 

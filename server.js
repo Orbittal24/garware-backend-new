@@ -3827,7 +3827,8 @@ console.log("received body ",req.body)
     // Loop through the latest entries and fetch spool data for each machine
     for (let entry of latestEntries) {
       const start_time = entry.start_time;
-console.log("start time of construction ",start_time,lineNo,current_date_time)
+        const machine_no = entry.machine_no;
+console.log("start time of construction ",start_time,lineNo,current_date_time,machine_no)
       // 2nd Query: Select spool_summary data for each machine with actual_date >= start_time and actual_date <= current_date_time
       const resultSpoolSummary = await sql.query`
       SELECT 

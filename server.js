@@ -3268,7 +3268,7 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
       const performance = performance1 * 100;
 
       // Calculate Quality
-      const variable5 = 0.9 * variable4;
+      const variable5 = 0.99 * variable4;
       console.log("variable5:", variable5);
       const quality1 = variable5 / variable4;
       const quality = quality1 * 100;
@@ -3387,7 +3387,7 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
       const performance1 = variable4 / variable3;
       const performance = performance1 * 100;
       // Calculate Quality
-      const variable5 = 0.9 * variable4;
+      const variable5 = 0.99 * variable4;
       console.log("variable5:", variable5);
       const quality1 = variable5 / variable4;
       const quality = quality1 * 100;
@@ -3653,7 +3653,7 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
       const performance = performance1 * 100;
 
       // Calculate Quality
-      const variable5 = 0.9 * variable4;
+      const variable5 = 0.99 * variable4;
       console.log("variable5:", variable5);
       const quality1 = variable5 / variable4;
       const quality = quality1 * 100;

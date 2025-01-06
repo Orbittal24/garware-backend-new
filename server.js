@@ -445,7 +445,7 @@ if (machinePulseCount == previousPulseData.pulseCount && machinePulseCount == 1)
 
     try {
       // Check if elapsed time is greater than 25 seconds
-      if (elapsedTime > 25) {
+      if (elapsedTime > 15) {
 
 
 console.log("Esp: ",Esp)

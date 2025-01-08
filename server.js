@@ -464,11 +464,13 @@ console.log("Esp: ",Esp)
         .input('run_time', sql.Float, 0) // Adjust as needed
         .input('shift_no', sql.Int, currentShift.shift_no)
         .input('actual_machine_no', sql.Int, actual_machine_no)
-        .input('current_shift_target', sql.Float, current_shift_target)
+      
+            .input('current_shift_target', sql.Float, spool)
+        .input('spool_date', sql.DateTime2, spool_date)
         .query(`INSERT INTO [RUNHOURS].[dbo].[atual_master_live] 
-                (machine_no, line_no, shift_start, shift_end, actual_date, live_count, final_live_count, construction, run_time, shift_no, esp, actual_machine_no,target, spool_count) 
+                (machine_no, line_no, shift_start, shift_end, actual_date, live_count, final_live_count, construction, run_time, shift_no, esp, actual_machine_no,target, spool_count, spool_date) 
                 VALUES 
-                (@machine_no, @line_no, @shift_start, @shift_end, @actual_date, @live_count, @final_live_count, @construction, @run_time, @shift_no, @Esp, @actual_machine_no,@current_shift_target, @spool_count)`);
+                (@machine_no, @line_no, @shift_start, @shift_end, @actual_date, @live_count, @final_live_count, @construction, @run_time, @shift_no, @Esp, @actual_machine_no,@current_shift_target, @spool_count, @spool_date)`);
     
           
 console.log('Inserted  successfully   after  ')
@@ -643,11 +645,13 @@ previousPulseData.pulseCount = machinePulseCount;
       .input('run_time', sql.Float, 0) // Adjust as needed
       .input('shift_no', sql.Int, currentShift.shift_no)
       .input('actual_machine_no', sql.Int, actual_machine_no)
-      .input('current_shift_target', sql.Float, current_shift_target)
+     
+       .input('current_shift_target', sql.Float, spool)
+        .input('spool_date', sql.DateTime2, spool_date)
       .query(`INSERT INTO [RUNHOURS].[dbo].[atual_master_live] 
-              (machine_no, line_no, shift_start, shift_end, actual_date, live_count, final_live_count, construction, run_time, shift_no, esp, actual_machine_no,target, spool_count) 
+              (machine_no, line_no, shift_start, shift_end, actual_date, live_count, final_live_count, construction, run_time, shift_no, esp, actual_machine_no,target, spool_count,spool_date) 
               VALUES 
-              (@machine_no, @line_no, @shift_start, @shift_end, @actual_date, @live_count, @final_live_count, @construction, @run_time, @shift_no, @Esp, @actual_machine_no,@current_shift_target, @spool_count)`);
+              (@machine_no, @line_no, @shift_start, @shift_end, @actual_date, @live_count, @final_live_count, @construction, @run_time, @shift_no, @Esp, @actual_machine_no,@current_shift_target, @spool_count, @spool_date)`);
   }   //normal insert
 
 
@@ -4081,162 +4085,6 @@ console.log("start time of construction ",start_time,lineNo,machineNo,current_da
 
 
 
-app.post('/api/new_run_hrs_Line_machine_wholeDay', async (req, res) => {
-    const { dataArray } = req.body; // Expecting an array of objects with 'actualDate' and 'Line'
-  
-    console.log('Received request body:', req.body);
-  
-    try {
-      // Connect to the database
-      const pool = await sql.connect(dbConfig);
-  
-      const results = [];
-  
-      // Iterate through each item in the dataArray
-      for (const { actualDate, Line } of dataArray) {
-        console.log(`Processing Line: ${Line} for Date: ${actualDate}`);
-  
-        let liveCountData = await pool.request()
-          .input('actualDate', sql.DateTime, actualDate)
-          .input('Line', sql.Int, Line)
-          .query(`
-            WITH LatestEntries AS (
-              SELECT 
-                actual_machine_no,
-                final_live_count,
-                construction,
-                actual_date,
-                ROW_NUMBER() OVER (
-                  PARTITION BY actual_machine_no 
-                  ORDER BY actual_date DESC
-                ) AS rn
-              FROM 
-                [RUNHOURS].[dbo].[atual_master_live]
-              WHERE 
-                line_no = @Line AND 
-                CONVERT(Date, shift_start) = @actualDate
-            ),
-            TotalCounts AS (
-              SELECT
-                actual_machine_no,
-                SUM(final_live_count) AS totalLiveCount,
-                SUM(run_time) AS totalrun_time
-              FROM
-                [RUNHOURS].[dbo].[atual_master_live]
-              WHERE
-                line_no = @Line AND 
-                CONVERT(Date, shift_start) = @actualDate
-              GROUP BY
-                actual_machine_no
-            ),
-            Target AS (
-              SELECT
-                machine_no AS actual_machine_no,
-                SUM(Target_in_mtr) AS totalTarget
-              FROM
-                [RUNHOURS].[dbo].[master_set_machine_target]
-              WHERE
-                line_no = @Line  
-              GROUP BY
-                machine_no
-            ),
-            SpoolCounts AS (
-    SELECT
-        aml.actual_machine_no,
-        SUM(aml.spool_count) AS spool_count_total
-    FROM
-        [RUNHOURS].[dbo].[atual_master_live] aml
-    JOIN 
-        LatestEntries le ON aml.actual_machine_no = le.actual_machine_no
-    WHERE
-        aml.line_no = @Line AND 
-        CONVERT(Date, aml.shift_start) = @actualDate
-        AND aml.construction = le.construction  -- Matching latest construction
-    GROUP BY
-        aml.actual_machine_no
-)
-            SELECT
-              tc.actual_machine_no,
-              tc.totalrun_time,
-              tc.totalLiveCount,
-              le.construction AS latest_construction,
-              t.totalTarget AS target,
-              sc.spool_count_total
-            FROM
-              TotalCounts tc
-            JOIN
-              LatestEntries le ON tc.actual_machine_no = le.actual_machine_no
-            LEFT JOIN
-              Target t ON tc.actual_machine_no = t.actual_machine_no
-              LEFT JOIN
-    SpoolCounts sc ON tc.actual_machine_no = sc.actual_machine_no
-            WHERE le.rn = 1;
-          `);
-  
-        // if (liveCountData.recordset.length > 0) {
-        //   const processedData = liveCountData.recordset.map(record => {
-        //     const runTimeInSeconds = record.totalrun_time;
-        //     const runTimeInMinutes = typeof runTimeInSeconds === 'number' && !isNaN(runTimeInSeconds)
-        //       ? Math.floor(runTimeInSeconds / 60)
-        //       : 0;
-        //     const runTimeInHours = runTimeInMinutes / 60;
-  
-        //     return {
-        //       ...record,
-        //       run_time_minutes: runTimeInMinutes,
-        //       run_time_hours: runTimeInHours.toFixed(2)
-        //     };
-        //   });
-  
-        if (liveCountData.recordset.length > 0) {
-      const processedData = liveCountData.recordset.map(record => {
-          const runTimeInSeconds = record.totalrun_time;
-  
-          // Initialize hours, minutes, and seconds
-          let hours = 0;
-          let minutes = 0;
-          let seconds = 0;
-  
-          // Check if runTimeInSeconds is a valid number
-          if (typeof runTimeInSeconds === 'number' && !isNaN(runTimeInSeconds)) {
-              // Calculate hours, minutes, and seconds
-              hours = Math.floor(runTimeInSeconds / 3600);
-              minutes = Math.floor((runTimeInSeconds % 3600) / 60);
-              seconds = Math.floor(runTimeInSeconds % 60);
-          }
-  
-          // Format as "HR:MIN:SEC"
-          const formattedRunTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-  
-          return {
-              ...record,
-              run_time_hours: formattedRunTime // Add the formatted time to the record
-          };
-      });
-  
-          results.push({
-            line: Line,
-            actualDate,
-            data: processedData
-          });
-        } else {
-          results.push({
-            line: Line,
-            actualDate,
-            message: 'No live count data found for the given date range and line.'
-          });
-        }
-      }
-  
-      res.status(200).json({
-        message: 'RUN HRS. | Line machine (line-machine wise) for the entire day',
-        data: results
-      });
-    } catch (error) {
-      console.error('Error:', error);
-      res.status(500).json({ message: 'Internal Server Error' });
-    }
-  });
 
 
 // Start the server

@@ -918,7 +918,8 @@ const firstMachineData = machinesData[0];
 // const actualValue = parseInt(firstMachineData.actual);
 
 
-
+console.log("firstMachineData",firstMachineData)
+            console.log(" machinesData[0]", machinesData[0])
   if (parseInt(firstMachineData.actual) >= 0) {
   // If 'actual' is found, do not send this response
   console.log('Skipping response as "actual" is present in machineData');

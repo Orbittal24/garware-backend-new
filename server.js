@@ -3216,7 +3216,7 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
       FROM [RUNHOURS].[dbo].[shift_master]
     `);
 
-    console.log("variable1:", variable1);
+    console.log("Total time:", variable1);
     if (shiftData.recordset.length === 0) {
       res.status(404).json({ message: 'No shift data found.' });
       return;
@@ -3225,7 +3225,7 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
     const { tea_time, lunch_time } = shiftData.recordset[0];
     console.log("tea_time + lunch_time:", tea_time, lunch_time);
     const variable2 = variable1 - (tea_time + lunch_time);
-    console.log("variable2:", variable2);
+    console.log("Total time - (tea_time + lunch_time):", variable2);
 
     // Calculate Availability
     const availability1 = variable2 / variable1;
@@ -3248,7 +3248,7 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
       }
 
       const variable3 = targetData.recordset[0].totalTarget;
-      console.log("variable3:", variable3);
+      console.log("master target:", variable3);
 
       // Select live count data based on the shift start and end times
       const liveCountData = await pool.request()
@@ -3267,13 +3267,13 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
       }
 
       const variable4 = liveCountData.recordset[0].totalLiveCount;
-      console.log("variable4:", variable4);
+      console.log("actual produced mtr:", variable4);
       const performance1 = variable4 / variable3;
       const performance = performance1 * 100;
 
       // Calculate Quality
       const variable5 = 0.99 * variable4;
-      console.log("variable5:", variable5);
+      console.log("quality....:", variable5);
       const quality1 = variable5 / variable4;
       const quality = quality1 * 100;
       // Calculate OEE as a percentage

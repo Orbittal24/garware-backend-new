@@ -3209,7 +3209,7 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
     const pool = await sql.connect(dbConfig);
 
     // Convert 24 hours into minutes and store it in variable1
-    const variable1 = 24 * 60;
+    const variable1 = 79200;
 
     // Select tea_time and lunch_time from shift_master table and subtract it from variable1
     const shiftData = await pool.request().query(`
@@ -3217,7 +3217,7 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
       FROM [RUNHOURS].[dbo].[shift_master]
     `);
 
-    console.log("Total time:", variable1);
+    console.log("Total time  Planned Production Time:", variable1);
     if (shiftData.recordset.length === 0) {
       res.status(404).json({ message: 'No shift data found.' });
       return;
@@ -3225,8 +3225,11 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
 
     const { tea_time, lunch_time } = shiftData.recordset[0];
     console.log("tea_time + lunch_time:", tea_time, lunch_time);
-    const variable2 = variable1 - (tea_time + lunch_time);
-    console.log("Total time - (tea_time + lunch_time):", variable2);
+    // const variable2 = variable1 - (tea_time + lunch_time);
+     // console.log("Total time - (tea_time + lunch_time):", variable2);
+    const variable2 = 72000;
+     console.log("variable2  Actual Production Time", variable2);
+   
 
     // Calculate Availability
     const availability1 = variable2 / variable1;
@@ -3271,7 +3274,7 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
       
       const variable4 = liveCountData.recordset[0].totalLiveCount;
       console.log("actual run hr seconds:", variable4);
-      const performance1 = variable4 / variable3;
+      const performance1 = variable3 / variable4;
       const performance = performance1 * 100;
 
       // Calculate Quality
@@ -3326,8 +3329,8 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
     // Connect to the database
     const pool = await sql.connect(dbConfig);
 
-    // Convert 24 hours into minutes and store it in variable1
-    const variable1 = 24 * 60;
+   // Convert 24 hours into minutes and store it in variable1
+    const variable1 = 79200;
 
     // Select tea_time and lunch_time from shift_master table and subtract it from variable1
     const shiftData = await pool.request().query(`
@@ -3335,7 +3338,7 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
       FROM [RUNHOURS].[dbo].[shift_master]
     `);
 
-    console.log("variable1:", variable1);
+    console.log("Total time  Planned Production Time:", variable1);
     if (shiftData.recordset.length === 0) {
       res.status(404).json({ message: 'No shift data found.' });
       return;
@@ -3343,8 +3346,10 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
 
     const { tea_time, lunch_time } = shiftData.recordset[0];
     console.log("tea_time + lunch_time:", tea_time, lunch_time);
-    const variable2 = variable1 - (tea_time + lunch_time);
-    console.log("variable2:", variable2);
+    // const variable2 = variable1 - (tea_time + lunch_time);
+      const variable2 = 72000;
+     console.log("variable2  Actual Production Time", variable2);
+    // console.log("variable2:", variable2);
 
     // Calculate Availability
     const availability1 = variable2 / variable1;
@@ -3394,7 +3399,7 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
 
       const variable4 = liveCountData.recordset[0].totalLiveCount;
       console.log("variable4:", variable4);
-      const performance1 = variable4 / variable3;
+      const performance1 = variable3 / variable4;
       const performance = performance1 * 100;
       // Calculate Quality
       const variable5 = 0.99 * variable4;
@@ -3575,8 +3580,8 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
     // Connect to the database
     const pool = await sql.connect(dbConfig);
 
-    // Convert 24 hours into minutes and store it in variable1
-    const variable1 = 24 * 60;
+   // Convert 24 hours into minutes and store it in variable1
+    const variable1 = 79200;
 
     // Select tea_time and lunch_time from shift_master table and subtract it from variable1
     const shiftData = await pool.request()
@@ -3585,7 +3590,7 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
         FROM [RUNHOURS].[dbo].[shift_master]
       `);
 
-    console.log("variable1:", variable1);
+    console.log("Total time  Planned Production Time:", variable1);
     if (shiftData.recordset.length === 0) {
       res.status(404).json({ message: 'No shift data found.' });
       return;
@@ -3593,8 +3598,10 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
 
     const { tea_time, lunch_time } = shiftData.recordset[0];
     console.log("tea_time + lunch_time:", tea_time, lunch_time);
-    const variable2 = variable1 - (tea_time + lunch_time);
-    console.log("variable2:", variable2);
+    // const variable2 = variable1 - (tea_time + lunch_time);
+    // console.log("variable2:", variable2);
+      const variable2 = 72000;
+     console.log("variable2  Actual Production Time", variable2);
 
     // Array to store results for each set of inputs
     const results = [];
@@ -3661,7 +3668,7 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
 
       const variable4 = liveCountData.recordset[0].totalLiveCount;
       console.log("variable4:", variable4);
-      const performance1 = variable4 / variable3;
+      const performance1 = variable3 / variable4;
       const performance = performance1 * 100;
 
       // Calculate Quality

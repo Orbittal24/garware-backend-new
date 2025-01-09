@@ -3368,7 +3368,10 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
         return;
       }
 
-      const variable3 = targetData.recordset[0].totalTarget;
+      // const variable3 = targetData.recordset[0].totalTarget;
+     
+       const variable3 = 72000
+      console.log("master run time hr:", variable3);
       console.log("variable3:", variable3);
 
       // Select live count data based on the shift start and end times
@@ -3377,7 +3380,7 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
         .input('date1', sql.DateTime, date1)
         .input('date2', sql.DateTime, date2)
         .query(`
-          SELECT SUM(final_live_count) AS totalLiveCount
+          SELECT SUM(run_time) AS totalLiveCount
           FROM [RUNHOURS].[dbo].[atual_master_live]
           WHERE CONVERT(date, shift_start) >= @date1 
           AND CONVERT(date, shift_end) <= @date2
@@ -3625,8 +3628,10 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
         continue;  // Skip to the next iteration
       }
 
-      const variable3 = targetData.recordset[0].totalTarget;
-      console.log("variable3:", variable3);
+      // const variable3 = targetData.recordset[0].totalTarget;
+       const variable3 = 72000
+      console.log("master run time hr:", variable3);
+     
 
       // Select live count data based on the shift start and end times
       const liveCountData = await pool.request()
@@ -3635,7 +3640,7 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
         .input('date2', sql.DateTime, date2)
         .input('machine', sql.Int, machine)
         .query(`
-          SELECT SUM(final_live_count) AS totalLiveCount
+          SELECT SUM(run_time) AS totalLiveCount
           FROM [RUNHOURS].[dbo].[atual_master_live]
           WHERE CONVERT(date, shift_start) >= @date1 
           AND CONVERT(date, shift_end) <= @date2
@@ -4089,7 +4094,7 @@ console.log("start time of construction ",start_time,lineNo,machineNo,current_da
 
 
 
-
+// latest 9 Jan 2025  main dashboard
 app.post('/api/run_hrs_spool_sum', async (req, res) => {
   try {
     const { dataArray } = req.body; // Expecting an array of objects with 'actualDate' and 'Line'

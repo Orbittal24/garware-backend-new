@@ -4088,6 +4088,97 @@ console.log("start time of construction ",start_time,lineNo,machineNo,current_da
 
 
 
+app.post('/api/run_hrs_spool_sum', async (req, res) => {
+  try {
+    const { dataArray } = req.body; // Expecting an array of objects with 'actualDate' and 'Line'
+    console.log('Received request body:', req.body);
+
+    if (!Array.isArray(dataArray)) {
+      return res.status(400).json({ error: 'dataArray must be an array.' });
+    }
+
+    const pool = await sql.connect(dbConfig);
+    const results = [];
+
+    for (const { actualDate, Line } of dataArray) {
+      if (!actualDate || !Line) {
+        return res.status(400).json({
+          error: 'Each object in dataArray must include actualDate and Line.',
+        });
+      }
+
+      // Step 1: Get the latest spool_date for each actual_machine_no
+      const machineData = await pool
+        .request()
+        .input('actualDate', sql.DateTime, new Date(actualDate))
+        .input('Line', sql.Int, Line)
+        .query(`
+          SELECT 
+            actual_machine_no,
+            spool_date,
+            target,
+            construction
+          FROM (
+            SELECT 
+              actual_machine_no,
+              spool_date,
+              target,
+              construction,
+              ROW_NUMBER() OVER (
+                PARTITION BY actual_machine_no 
+                ORDER BY actual_date DESC
+              ) AS rn
+            FROM 
+              [RUNHOURS].[dbo].[atual_master_live]
+            WHERE 
+              line_no = @Line AND 
+              CONVERT(Date, shift_start) = @actualDate
+          ) AS subquery
+          WHERE rn = 1;
+        `);
+
+      // Step 2: Calculate the sum of spool_count for each actual_machine_no
+      const machineResults = [];
+      for (const machine of machineData.recordset) {
+        const { actual_machine_no, spool_date } = machine;
+
+        const spoolSumResult = await pool
+          .request()
+          .input('actualMachineNo', sql.Int, actual_machine_no)
+          .input('spoolDate', sql.DateTime, new Date(spool_date))
+          .query(`
+            SELECT 
+              SUM(spool_count) AS total_spool_count
+            FROM 
+              [RUNHOURS].[dbo].[atual_master_live]
+            WHERE 
+              actual_machine_no = @actualMachineNo AND 
+              actual_date >= @spoolDate;
+          `);
+
+        machineResults.push({
+          ...machine,
+          totalSpoolCount: spoolSumResult.recordset[0]?.total_spool_count || 0,
+        });
+      }
+
+      results.push({
+        actualDate,
+        Line,
+        data: machineResults,
+      });
+    }
+
+    res.json(results);
+  } catch (error) {
+    console.error('Error processing request:', error);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+
+
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server is running on http://IP:${port}`);

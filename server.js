@@ -3248,15 +3248,16 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
         return;
       }
 
-      const variable3 = targetData.recordset[0].totalTarget;
-      console.log("master target:", variable3);
+      // const variable3 = targetData.recordset[0].totalTarget;
+       const variable3 = 72000
+      console.log("master run time hr:", variable3);
 
       // Select live count data based on the shift start and end times
       const liveCountData = await pool.request()
         .input('date1', sql.DateTime, date1)
         .input('date2', sql.DateTime, date2)
         .query(`
-          SELECT SUM(final_live_count) AS totalLiveCount
+          SELECT SUM(run_time) AS totalLiveCount
           FROM [RUNHOURS].[dbo].[atual_master_live]
           WHERE CONVERT(date, shift_start) >= @date1 
           AND CONVERT(date, shift_end) <= @date2
@@ -3267,8 +3268,9 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
         return;
       }
 
+      
       const variable4 = liveCountData.recordset[0].totalLiveCount;
-      console.log("actual produced mtr:", variable4);
+      console.log("actual run hr seconds:", variable4);
       const performance1 = variable4 / variable3;
       const performance = performance1 * 100;
 

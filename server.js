@@ -3157,7 +3157,7 @@ var lineeee = line_check.recordset[0].line_number;
                 WHERE machine_no = @machine_no 
                   AND esp = @Esp
                   AND line_no = @line_no 
-                  AND actual_date >= @shift_start`);
+                 `);
 
       console.log(`Spool count reset for machine ${machineId}`);
 

@@ -3227,7 +3227,7 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
     console.log("tea_time + lunch_time:", tea_time, lunch_time);
     // const variable2 = variable1 - (tea_time + lunch_time);
      // console.log("Total time - (tea_time + lunch_time):", variable2);
-    const variable2 = 72000;
+    const variable2 = 73800;
      console.log("variable2  Actual Production Time", variable2);
    
 
@@ -3347,7 +3347,7 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
     const { tea_time, lunch_time } = shiftData.recordset[0];
     console.log("tea_time + lunch_time:", tea_time, lunch_time);
     // const variable2 = variable1 - (tea_time + lunch_time);
-      const variable2 = 72000;
+      const variable2 = 73800;
      console.log("variable2  Actual Production Time", variable2);
     // console.log("variable2:", variable2);
 
@@ -3600,7 +3600,7 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
     console.log("tea_time + lunch_time:", tea_time, lunch_time);
     // const variable2 = variable1 - (tea_time + lunch_time);
     // console.log("variable2:", variable2);
-      const variable2 = 72000;
+      const variable2 = 73800;
      console.log("variable2  Actual Production Time", variable2);
 
     // Array to store results for each set of inputs

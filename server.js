@@ -3274,10 +3274,11 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
       
       const total_runtime = liveCountData.recordset[0].totalLiveCount;
         const hours = total_runtime / 3600;
+        console.log("hours:", hours);
         const variable4 = hours / 24;
-      console.log("variable4:", variable4);
+      console.log("variable4:calculateOEEAllPlant", variable4);
       // console.log("actual run hr seconds:", variable4);
-      const performance1 = variable3 / variable4;
+      const performance1 = variable4 / variable3;
       const performance = performance1 * 100;
 
       // Calculate Quality
@@ -3402,9 +3403,10 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
 
       const total_runtime = liveCountData.recordset[0].totalLiveCount;
      const hours = total_runtime / 3600;
+       console.log("hours", hours);
         const variable4 = hours / 24;
-      console.log("variable4:", variable4);
-      const performance1 = variable3 / variable4;
+      console.log("variable4:calculateOEELineWise", variable4);
+      const performance1 = variable4 / variable3;
       const performance = performance1 * 100;
       // Calculate Quality
       const variable5 = 0.99 * variable4;
@@ -3674,9 +3676,9 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
       const total_runtime = liveCountData.recordset[0].totalLiveCount;
       
         const variable4 = total_runtime / 3600;
-      console.log("variable4:", variable4);
+      console.log("variable4:calculateOEELine_machine", variable4);
      
-      const performance1 = variable3 / variable4;
+      const performance1 = variable4 / variable3;
       const performance = performance1 * 100;
 
       // Calculate Quality

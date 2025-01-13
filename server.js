@@ -3202,14 +3202,14 @@ var lineeee = line_check.recordset[0].line_number;
 app.post('/api/calculateOEEAllPlant', async (req, res) => {
   const dataArray = req.body;
 
-  console.log('Received request body:', dataArray);
+  console.log('Received request body:  for  calculateOEEAllPlant', dataArray);
 
   try {
     // Connect to the database
     const pool = await sql.connect(dbConfig);
 
     // Convert 24 hours into minutes and store it in variable1
-    const variable1 = 79200;
+    const variable1 = 79200 / 3600;;
 
     // Select tea_time and lunch_time from shift_master table and subtract it from variable1
     const shiftData = await pool.request().query(`
@@ -3227,7 +3227,7 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
     console.log("tea_time + lunch_time:", tea_time, lunch_time);
     // const variable2 = variable1 - (tea_time + lunch_time);
      // console.log("Total time - (tea_time + lunch_time):", variable2);
-    const variable2 = 73800;
+    const variable2 = 73800 / 3600;;
      console.log("variable2  Actual Production Time", variable2);
    
 
@@ -3252,7 +3252,7 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
       }
 
       // const variable3 = targetData.recordset[0].totalTarget;
-       const variable3 = 72000
+       const variable3 = 72000 / 3600;
       console.log("master run time hr:", variable3);
 
       // Select live count data based on the shift start and end times
@@ -3273,7 +3273,8 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
 
       
       const total_runtime = liveCountData.recordset[0].totalLiveCount;
-        const variable4 = total_runtime/24
+        const hours = total_runtime / 3600;
+        const variable4 = hours / 24;
       console.log("variable4:", variable4);
       // console.log("actual run hr seconds:", variable4);
       const performance1 = variable3 / variable4;
@@ -3325,14 +3326,14 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
 app.post('/api/calculateOEELineWise', async (req, res) => {
   const dataArray = req.body;
 
-  console.log('Received request body:', dataArray);
+  console.log('Received request body: for calculateOEELineWise', dataArray);
 
   try {
     // Connect to the database
     const pool = await sql.connect(dbConfig);
 
    // Convert 24 hours into minutes and store it in variable1
-    const variable1 = 79200;
+    const variable1 = 79200 / 3600;;
 
     // Select tea_time and lunch_time from shift_master table and subtract it from variable1
     const shiftData = await pool.request().query(`
@@ -3349,7 +3350,7 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
     const { tea_time, lunch_time } = shiftData.recordset[0];
     console.log("tea_time + lunch_time:", tea_time, lunch_time);
     // const variable2 = variable1 - (tea_time + lunch_time);
-      const variable2 = 73800;
+      const variable2 = 73800 / 3600;;
      console.log("variable2  Actual Production Time", variable2);
     // console.log("variable2:", variable2);
 
@@ -3377,7 +3378,7 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
 
       // const variable3 = targetData.recordset[0].totalTarget;
      
-       const variable3 = 72000
+       const variable3 = 72000 / 3600;
       console.log("master run time hr:", variable3);
       console.log("variable3:", variable3);
 
@@ -3400,7 +3401,8 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
       }
 
       const total_runtime = liveCountData.recordset[0].totalLiveCount;
-      const variable4 = total_runtime/24
+     const hours = total_runtime / 3600;
+        const variable4 = hours / 24;
       console.log("variable4:", variable4);
       const performance1 = variable3 / variable4;
       const performance = performance1 * 100;
@@ -3577,14 +3579,14 @@ const verifyToken = (req, res, next) => {
 app.post('/api/calculateOEELine_machine',  async (req, res) => {
   const dataArray = req.body;  // Expecting an array of objects with date1, date2, Line, and machine
   
-  console.log('Received request body:', dataArray);
+  console.log('Received request body: for calculateOEELine_machine', dataArray);
   
   try {
     // Connect to the database
     const pool = await sql.connect(dbConfig);
 
    // Convert 24 hours into minutes and store it in variable1
-    const variable1 = 79200;
+    const variable1 = 79200 / 3600;
 
     // Select tea_time and lunch_time from shift_master table and subtract it from variable1
     const shiftData = await pool.request()
@@ -3603,7 +3605,7 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
     console.log("tea_time + lunch_time:", tea_time, lunch_time);
     // const variable2 = variable1 - (tea_time + lunch_time);
     // console.log("variable2:", variable2);
-      const variable2 = 73800;
+      const variable2 = 73800 / 3600;
      console.log("variable2  Actual Production Time", variable2);
 
     // Array to store results for each set of inputs
@@ -3639,7 +3641,7 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
       }
 
       // const variable3 = targetData.recordset[0].totalTarget;
-       const variable3 = 72000
+       const variable3 = 72000 / 3600;
       console.log("master run time hr:", variable3);
      
 
@@ -3670,7 +3672,8 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
       }
 
       const total_runtime = liveCountData.recordset[0].totalLiveCount;
-        const variable4 = total_runtime/24
+      
+        const variable4 = total_runtime / 3600;
       console.log("variable4:", variable4);
      
       const performance1 = variable3 / variable4;

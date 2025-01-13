@@ -3272,8 +3272,10 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
       }
 
       
-      const variable4 = liveCountData.recordset[0].totalLiveCount;
-      console.log("actual run hr seconds:", variable4);
+      const total_runtime = liveCountData.recordset[0].totalLiveCount;
+        const variable4 = total_runtime/24
+      console.log("variable4:", variable4);
+      // console.log("actual run hr seconds:", variable4);
       const performance1 = variable3 / variable4;
       const performance = performance1 * 100;
 
@@ -3397,7 +3399,8 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
         return;
       }
 
-      const variable4 = liveCountData.recordset[0].totalLiveCount;
+      const total_runtime = liveCountData.recordset[0].totalLiveCount;
+      const variable4 = total_runtime/24
       console.log("variable4:", variable4);
       const performance1 = variable3 / variable4;
       const performance = performance1 * 100;
@@ -3666,8 +3669,10 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
         continue;  // Skip to the next iteration
       }
 
-      const variable4 = liveCountData.recordset[0].totalLiveCount;
+      const total_runtime = liveCountData.recordset[0].totalLiveCount;
+        const variable4 = total_runtime/24
       console.log("variable4:", variable4);
+     
       const performance1 = variable3 / variable4;
       const performance = performance1 * 100;
 

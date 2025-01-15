@@ -779,21 +779,21 @@ if (atual_master_live_count1[0].live_count >= masterPulseValue) {
   // messages.push(`Target for machine ${machineId} is completed in shift ${currentShift.shift_no}, Line: ${Line}, ESP: ${Esp}.`);
 
   // Reset live_count to 0 in the database for the specific machine and shift
-  await pool.request()
-    .input('machine_no', sql.Int, machineId)
-    .input('line_no', sql.VarChar, Line)
-    .input('Esp', sql.Int, Esp)
-    .input('shift_start', sql.DateTime2, spool_date) // Ensure spool_date is a DateTime2 value
-    .query(`
-      UPDATE [RUNHOURS].[dbo].[atual_master_live]
-      SET live_count = 0
-      WHERE machine_no = @machine_no 
-        AND esp = @Esp
-        AND line_no = @line_no 
-        AND actual_date >= @shift_start -- Adjusted to match exact shift start
-    `);
+  // await pool.request()
+  //   .input('machine_no', sql.Int, machineId)
+  //   .input('line_no', sql.VarChar, Line)
+  //   .input('Esp', sql.Int, Esp)
+  //   .input('shift_start', sql.DateTime2, spool_date) // Ensure spool_date is a DateTime2 value
+  //   .query(`
+  //     UPDATE [RUNHOURS].[dbo].[atual_master_live]
+  //     SET live_count = 0
+  //     WHERE machine_no = @machine_no 
+  //       AND esp = @Esp
+  //       AND line_no = @line_no 
+  //       AND actual_date >= @shift_start -- Adjusted to match exact shift start
+  //   `);
 
-    console.log("updated")
+  //   console.log("updated")
 }
 
 const actual = checklivecountmtr.recordset[0];

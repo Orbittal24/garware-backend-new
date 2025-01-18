@@ -1804,8 +1804,10 @@ const PI = Math.PI;
 // Calculate meters per pulse from pulley diameter
 app.post('/api/calculate_target_mtr', async (req, res) => {
   const entries = req.body;
+  console.log("receive data",req.body)
 
   if (!Array.isArray(entries) || entries.length === 0) {
+    console.log("Entries should be a non-empty array")
     return res.status(400).send('Entries should be a non-empty array');
   }
 
@@ -1814,7 +1816,7 @@ app.post('/api/calculate_target_mtr', async (req, res) => {
 
     for (const entry of entries) {
       const { line_no, machine_no, pulley_diameter, entry_date, target_in_mtr, rpm } = entry;
-
+console.log("entry",entry)
       if (!line_no || !machine_no || !pulley_diameter || !entry_date || !target_in_mtr || !rpm) {
         throw new Error('Missing required fields');
       }
@@ -1829,6 +1831,7 @@ app.post('/api/calculate_target_mtr', async (req, res) => {
       // Convert circumference to meters
       const calculate_in_mtrr = circumference_in_inches * INCH_TO_METER;
 calculate_in_mtr = calculate_in_mtrr + 0.005
+      console.log("calculte in mtrafter factorss",calculate_in_mtr);
       
       // Calculate circumference in inches
       // const circumference_in_inches = PI * pulley_diameter;

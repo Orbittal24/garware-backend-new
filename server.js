@@ -1821,17 +1821,25 @@ console.log("entry",entry)
         throw new Error('Missing required fields');
       }
 
+      
 
  // Convert pulley diameter from mm to inches
       const pulley_diameter_inches = pulley_diameter * MM_TO_INCH;
+ console.log("pulley_diameter_inches",pulley_diameter_inches);
 
+      
       // Calculate circumference in inches
       const circumference_in_inches = PI * pulley_diameter_inches;
+ console.log("circumference_in_inches",circumference_in_inches);
 
+      
       // Convert circumference to meters
       const calculate_in_mtrr = circumference_in_inches * INCH_TO_METER;
+ console.log("calculate_in_mtrr",calculate_in_mtrr);
+      
 calculate_in_mtr = calculate_in_mtrr + 0.005
       console.log("calculte in mtrafter factorss",calculate_in_mtr);
+
       
       // Calculate circumference in inches
       // const circumference_in_inches = PI * pulley_diameter;

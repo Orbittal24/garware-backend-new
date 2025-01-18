@@ -1799,6 +1799,8 @@ const MM_TO_INCH = 1 / 25.4; // 1 mm = 0.0393701 inches
 const INCH_TO_METER = 0.0254; // 1 inch = 0.0254 meters
 const PI = Math.PI;
 
+
+
 // Calculate meters per pulse from pulley diameter
 app.post('/api/calculate_target_mtr', async (req, res) => {
   const entries = req.body;
@@ -1825,8 +1827,8 @@ app.post('/api/calculate_target_mtr', async (req, res) => {
       const circumference_in_inches = PI * pulley_diameter_inches;
 
       // Convert circumference to meters
-      const calculate_in_mtr = circumference_in_inches * INCH_TO_METER;
-
+      const calculate_in_mtrr = circumference_in_inches * INCH_TO_METER;
+calculate_in_mtr = calculate_in_mtrr + 0.005
       
       // Calculate circumference in inches
       // const circumference_in_inches = PI * pulley_diameter;

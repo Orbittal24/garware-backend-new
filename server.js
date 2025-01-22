@@ -1837,8 +1837,9 @@ console.log("entry",entry)
       const calculate_in_mtrr = circumference_in_inches * INCH_TO_METER;
  console.log("calculate_in_mtrr",calculate_in_mtrr);
       
-calculate_in_mtr = calculate_in_mtrr + 0.007
-      console.log("calculte in mtrafter factorss",calculate_in_mtr);
+// calculate_in_mtr = calculate_in_mtrr + 0.007
+      calculate_in_mtr = calculate_in_mtrr 
+      // console.log("calculte in mtrafter factorss",calculate_in_mtr);
 
       // Round to three decimal places
 const rounded_calculate_in_mtr = Math.round(calculate_in_mtr * 1000) / 1000;

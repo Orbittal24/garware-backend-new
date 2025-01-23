@@ -1846,8 +1846,8 @@ console.log("entry",entry)
 //       console.log("calculte in mtrafter factorss",calculate_in_mtr);
 
       // Round to three decimal places
-const rounded_calculate_in_mtr = Math.round(calculate_in_mtr * 1000) / 1000;
-       console.log("rounded_calculate_in_mtr",rounded_calculate_in_mtr);
+// const rounded_calculate_in_mtr = Math.round(calculate_in_mtr * 1000) / 1000;
+//        console.log("rounded_calculate_in_mtr",rounded_calculate_in_mtr);
 
       
       // Calculate circumference in inches
@@ -1874,7 +1874,7 @@ const rounded_calculate_in_mtr = Math.round(calculate_in_mtr * 1000) / 1000;
           .input('pulley_diameter', sql.Float, pulley_diameter)
           .input('entry_date', sql.Date, entry_date)
           .input('target_in_mtr', sql.Float, target_in_mtr)
-          .input('calculate_in_mtr', sql.Float, rounded_calculate_in_mtr)
+          .input('calculate_in_mtr', sql.Float, calculate_in_mtr)
           .input('rpm', sql.Int, rpm)
           .query(`UPDATE [RUNHOURS].[dbo].[master_set_machine_target]
                   SET pulley_diameter = @pulley_diameter, 
@@ -1890,7 +1890,7 @@ const rounded_calculate_in_mtr = Math.round(calculate_in_mtr * 1000) / 1000;
           .input('pulley_diameter', sql.Float, pulley_diameter)
           .input('entry_date', sql.Date, entry_date)
           .input('target_in_mtr', sql.Float, target_in_mtr)
-          .input('calculate_in_mtr', sql.Float, rounded_calculate_in_mtr)
+          .input('calculate_in_mtr', sql.Float, calculate_in_mtr)
           .input('rpm', sql.Int, rpm)
           .query(`INSERT INTO [RUNHOURS].[dbo].[master_set_machine_target] 
                   (line_no, machine_no, pulley_diameter, entry_date, target_in_mtr, calculate_in_mtr, rpm) 

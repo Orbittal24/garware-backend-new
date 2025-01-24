@@ -2958,7 +2958,9 @@ app.post('/api/run_hrs_Line_machine_wholeDay', async (req, res) => {
             LatestEntries le ON tc.actual_machine_no = le.actual_machine_no
           LEFT JOIN
             Target t ON tc.actual_machine_no = t.actual_machine_no
-          WHERE le.rn = 1;
+          WHERE le.rn = 1
+          ORDER BY tc.actual_machine_no
+          ;
         `);
 
       // if (liveCountData.recordset.length > 0) {

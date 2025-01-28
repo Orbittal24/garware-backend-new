@@ -807,7 +807,7 @@ console.log("actual mtr final:",actual.spool_count,"actual_machine_no:::::::::::
 
                           // messages.push(`Target for machine ${machineId} is completed in shift ${currentShift.shift_no}, Line: ${Line}, ESP: ${Esp}.`);
                           const statusCheck = await pool.request()
-        .input('machine_no', sql.Int, machineId)
+        .input('machine_no', sql.Int, actual_machine_no)
         .input('line_no', sql.Int, Line)
         .query(`
             SELECT status 

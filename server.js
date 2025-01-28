@@ -806,7 +806,87 @@ console.log("actual mtr final:",actual.spool_count,"actual_machine_no:::::::::::
 
 
                           // messages.push(`Target for machine ${machineId} is completed in shift ${currentShift.shift_no}, Line: ${Line}, ESP: ${Esp}.`);
-                          messages.push(`Target for machine ${machineId} is completed`);
+                          const statusCheck = await pool.request()
+        .input('machine_no', sql.Int, machineId)
+        .input('line_no', sql.Int, Line)
+        .query(`
+            SELECT status 
+            FROM [RUNHOURS].[dbo].[bypass]
+            WHERE machine_no = @machine_no AND Line = @line_no
+        `);
+
+        console.log('Stausssssssssssssssssssssss',statusCheck.recordset[0].status,statusCheck.recordset.length);
+        
+
+    if (statusCheck.recordset.length > 0 && statusCheck.recordset[0].status === 'disabled') {
+        // If the machine is disabled, only push the message
+        messages.push(`Target for machine ${machineId} is completed`);
+        console.log('Target completedddddddddddddddddd');
+        
+    } else {
+
+      console.log('just resttttttttttttttttttttttttttt');
+
+        // Insert the spool_count and actual_date into the spool_summary table
+        await pool.request()
+            .input('machine_no', sql.Int, actual_machine_no)
+            .input('line_no', sql.Int, line_check.recordset[0].line_number)
+            .input('Esp', sql.Int, Esp)
+            .input('shift_start', sql.DateTime2, spool_date)
+            .input('construction', sql.VarChar, construction_check.recordset[0].construction)
+            .input('spool_count', sql.Float, actual.spool_count)
+           // .input('actual_date', sql.Date, actualDate)
+            .query(`
+                INSERT INTO [RUNHOURS].[dbo].[spool_summary] 
+                (machine_no, line_no, Esp, shift_start, spool_count, construction) 
+                VALUES (@machine_no, @line_no, @Esp, @shift_start, @spool_count, @construction)
+            `);
+
+        console.log(`Data inserted for machine ${machineId}`);
+
+        // Reset the spool_count in atual_master_live table
+        await pool.request()
+            .input('machine_no', sql.Int, machineId)
+            .input('line_no', sql.Int, line_check.recordset[0].line_number)
+            .input('Esp', sql.Int, Esp)
+            .input('shift_start', sql.DateTime2, spool_date)
+            .query(`
+                UPDATE [RUNHOURS].[dbo].[atual_master_live]  
+                SET spool_count = 0
+                WHERE machine_no = @machine_no 
+                  AND esp = @Esp
+                  AND line_no = @line_no
+            `);
+
+        console.log(`Spool count reset for machine ${machineId}`);
+
+        // Verify the update was successful
+        const result = await pool.request()
+            .input('machine_no', sql.Int, actual_machine_no)
+            .input('Esp', sql.Int, Esp)
+            .input('shift_start', sql.DateTime2, spool_date)
+            .input('line_no', sql.Int, line_check.recordset[0].line_number)
+            .query(`
+                SELECT spool_count 
+                FROM [RUNHOURS].[dbo].[atual_master_live]
+                WHERE machine_no = @machine_no 
+                  AND esp = @Esp
+                  AND line_no = @line_no 
+                  AND shift_start >= @shift_start
+            `);
+
+        // Check if the spool_count is updated to 0
+        if (result.recordset.length > 0) {
+            const updatedCount = result.recordset[0].spool_count;
+            if (updatedCount === 0) {
+                console.log('Update successful: spool_count is now 0.');
+            } else {
+                console.log(`Update failed: spool_count is still ${updatedCount}.`);
+            }
+        } else {
+            console.log('No records found after update.');
+        }
+    }
                          
                           //   await pool.request()
                           // .input('machine_no', sql.Int, machineId)

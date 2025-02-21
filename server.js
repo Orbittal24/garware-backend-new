@@ -4215,7 +4215,7 @@ console.log("start time of construction ",start_time,lineNo,machineNo,current_da
 
 
 
-latest 9 Jan 2025  main dashboard
+
 app.post('/api/run_hrs_spool_sum', async (req, res) => {
   try {
     const { dataArray } = req.body; // Expecting an array of objects with 'actualDate' and 'Line'

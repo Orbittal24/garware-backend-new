@@ -136,14 +136,59 @@ const pool = await sql.connect(dbConfig)
                           machine_number = @machine_number
                           AND esp_no = @esp_no`);
 
-                          const Line = line_check.recordset[0].line_number;
+                          // const Line = line_check.recordset[0].line_number;
+                          // if (line_check.recordset.length > 0) {
+                          //   const Line = line_check.recordset[0].line_number;
+                          //   console.log('Line number:', Line); 
+                          // } else {
+                          //   console.log('No matching record found in mater_line_machine_esp');
+                          // }
+
+
                           if (line_check.recordset.length > 0) {
                             const Line = line_check.recordset[0].line_number;
-                            console.log('Line number:', Line); 
-                          } else {
+                            console.log('Line number:', Line);
+                        
+                            const actual_machine_no = line_check.recordset[0].actual_machine_no;
+                            console.log('actual_machine_no:', actual_machine_no);
+                        } else {
                             console.log('No matching record found in mater_line_machine_esp');
-                          }
+                        
+                            // Check if the controller ID already exists
+                            const checkController = await pool.request()
+                                .input('esp_no', sql.Int, Esp)
+                                .query(`SELECT * FROM [RUNHOURS].[dbo].[unmapped_controller] 
+                                        WHERE contro_id = @esp_no`);
+                        
+                            if (checkController.recordset.length > 0) {
+                                // Update the status if already exists
+                                await pool.request()
+                                    .input('esp_no', sql.Int, Esp)
+                                    .query(`UPDATE [RUNHOURS].[dbo].[unmapped_controller] 
+                                            SET status = 'unmapped', date = GETDATE() 
+                                            WHERE contro_id = @esp_no`);
+                                console.log('Updated unmapped status for existing controller ID:', Esp);
+                            } else {
+                                // Insert new record if not exists
+                                await pool.request()
+                                    .input('esp_no', sql.Int, Esp)
+                                    .input('status', sql.VarChar, 'unmapped')
+                                    .query(`INSERT INTO [RUNHOURS].[dbo].[unmapped_controller] (contro_id, status, date) 
+                                            VALUES (@esp_no, @status, GETDATE())`);
+                                console.log('Inserted new unmapped controller ID:', Esp);
+                            }
 
+                              // Stop further processing and return a response
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Controller not registered. Process terminated.' 
+  });
+
+                        }
+
+
+                        const Line = line_check.recordset[0].line_number;
+            
                           const actual_machine_no = line_check.recordset[0].actual_machine_no;
 
                           console.log(' actual_machine_no:', actual_machine_no); 

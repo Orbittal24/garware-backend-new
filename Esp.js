@@ -1,21 +1,20 @@
-
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 
 #include <ArduinoJson.h>
 
 // Network credentials
-//const char* ssid = "Garware";
-//const char* password = "braiding";
-
-//const char* ssid = "OEEPPLMFG";
-//const char* password = "100Cr100";
-
-const char* ssid = "Ppp";
+const char* ssid = "Garware";
 const char* password = "braiding";
 
+
+
+
+
+
+
 // Server details
-const char* serverUrl = "http://192.168.195.207:3001/api/data";
+const char* serverUrl = "http://192.168.1.109:3001/api/data";
 
 
 
@@ -30,8 +29,8 @@ struct MachineData {
 };
 
 MachineData machineArray[NUM_MACHINES] = {
-  {"27", "1", 0, 0, 0}, {"27", "2", 0, 0, 0}, {"27", "3", 0, 0, 0}, {"27", "4", 0, 0, 0},
-  {"27", "5", 0, 0, 0}, {"27", "6", 0, 0, 0}, {"27", "7", 0, 0, 0}, {"27", "8", 0, 0, 0}
+  {"1", "1", 0, 0, 0}, {"1", "2", 0, 0, 0}, {"1", "3", 0, 0, 0}, {"1", "4", 0, 0, 0},
+  {"1", "5", 0, 0, 0}, {"1", "6", 0, 0, 0}, {"1", "7", 0, 0, 0}, {"1", "8", 0, 0, 0}
 };
 
 void setup() {
@@ -197,7 +196,7 @@ void handleStoredData() {
 
 void sendHighDurationDataToServer(String data) {
   // Define a different server URL for high-duration events
-  const char* highDurationServerUrl = "http://192.168.195.207:3001/api/processMachineData"; // Change the URL accordingly
+  const char* highDurationServerUrl = "http://192.168.1.109:3001/api/processMachineData"; // Change the URL accordingly
 
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
@@ -272,5 +271,4 @@ void checkIfTargetCompleted(String machineId) {
         }
         }
         }  
-
 

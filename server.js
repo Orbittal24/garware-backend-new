@@ -1950,10 +1950,20 @@ app.post('/api/calculate_target_mtr', async (req, res) => {
       
       const { line_no, machine_no, pulley_diameter, entry_date, target_in_mtr, rpm } = entry;
 console.log("entry......",entry)
-      if (!line_no || !machine_no || !pulley_diameter || !entry_date || !target_in_mtr || !rpm) {
-         console.error("Error: Missing required fields in entry...", entry);
-        throw new Error('Missing required fields');
-      }
+      // if (!line_no || !machine_no || !pulley_diameter || !entry_date || !target_in_mtr || !rpm) {
+      //    console.error("Error: Missing required fields in entry...", entry);
+      //   throw new Error('Missing required fields');
+      // }
+
+      if (
+  line_no === undefined || machine_no === undefined || 
+  pulley_diameter === undefined || entry_date === undefined || 
+  target_in_mtr === undefined || rpm === undefined || 
+  entry_date === ""
+) {
+  console.error("Error: Missing required fields in entry...", entry);
+  throw new Error("Missing required fields");
+}
 
       
 

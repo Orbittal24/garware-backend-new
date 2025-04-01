@@ -1943,6 +1943,7 @@ app.post('/api/calculate_target_mtr', async (req, res) => {
       const { line_no, machine_no, pulley_diameter, entry_date, target_in_mtr, rpm } = entry;
 console.log("entry",entry)
       if (!line_no || !machine_no || !pulley_diameter || !entry_date || !target_in_mtr || !rpm) {
+         console.error("Error: Missing required fields in entry", entry);
         throw new Error('Missing required fields');
       }
 

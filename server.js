@@ -1940,8 +1940,16 @@ app.post('/api/calculate_target_mtr', async (req, res) => {
     const pool = await sql.connect(dbConfig); 
 
     for (const entry of entries) {
+
+      // Convert data types
+  entry.line_no = Number(entry.line_no);
+  entry.machine_no = Number(entry.machine_no);
+  entry.pulley_diameter = parseFloat(entry.pulley_diameter);
+  entry.target_in_mtr = parseFloat(entry.target_in_mtr);
+  entry.rpm = Number(entry.rpm);
+      
       const { line_no, machine_no, pulley_diameter, entry_date, target_in_mtr, rpm } = entry;
-console.log("entry",entry)
+console.log("entry......",entry)
       if (!line_no || !machine_no || !pulley_diameter || !entry_date || !target_in_mtr || !rpm) {
          console.error("Error: Missing required fields in entry", entry);
         throw new Error('Missing required fields');

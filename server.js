@@ -2000,7 +2000,7 @@ console.log("entry",entry)
           .input('entry_date', sql.Date, entry_date)
           .input('target_in_mtr', sql.Float, target_in_mtr)
           .input('calculate_in_mtr', sql.Float, calculate_in_mtr)
-          .input('rpm', sql.Int, rpm)
+          .input('rpm', sql.Int, 0)
           .query(`UPDATE [RUNHOURS].[dbo].[master_set_machine_target]
                   SET pulley_diameter = @pulley_diameter, 
                       target_in_mtr = @target_in_mtr, 
@@ -2016,7 +2016,7 @@ console.log("entry",entry)
           .input('entry_date', sql.Date, entry_date)
           .input('target_in_mtr', sql.Float, target_in_mtr)
           .input('calculate_in_mtr', sql.Float, calculate_in_mtr)
-          .input('rpm', sql.Int, rpm)
+          .input('rpm', sql.Int, 0)
           .query(`INSERT INTO [RUNHOURS].[dbo].[master_set_machine_target] 
                   (line_no, machine_no, pulley_diameter, entry_date, target_in_mtr, calculate_in_mtr, rpm) 
                   VALUES (@line_no, @machine_no, @pulley_diameter, @entry_date, @target_in_mtr, @calculate_in_mtr, @rpm)`);

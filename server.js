@@ -1929,7 +1929,7 @@ const PI = Math.PI;
 // Calculate meters per pulse from pulley diameter
 app.post('/api/calculate_target_mtr', async (req, res) => {
   const entries = req.body;
-  console.log("receive data",req.body)
+  console.log("receive data....",req.body)
 
   if (!Array.isArray(entries) || entries.length === 0) {
     console.log("Entries should be a non-empty array")
@@ -1941,17 +1941,17 @@ app.post('/api/calculate_target_mtr', async (req, res) => {
 
     for (const entry of entries) {
 
-      // Convert data types
-  entry.line_no = Number(entry.line_no);
-  entry.machine_no = Number(entry.machine_no);
-  entry.pulley_diameter = parseFloat(entry.pulley_diameter);
-  entry.target_in_mtr = parseFloat(entry.target_in_mtr);
-  entry.rpm = Number(entry.rpm);
+  //     // Convert data types
+  // entry.line_no = Number(entry.line_no);
+  // entry.machine_no = Number(entry.machine_no);
+  // entry.pulley_diameter = parseFloat(entry.pulley_diameter);
+  // entry.target_in_mtr = parseFloat(entry.target_in_mtr);
+  // entry.rpm = Number(entry.rpm);
       
       const { line_no, machine_no, pulley_diameter, entry_date, target_in_mtr, rpm } = entry;
 console.log("entry......",entry)
       if (!line_no || !machine_no || !pulley_diameter || !entry_date || !target_in_mtr || !rpm) {
-         console.error("Error: Missing required fields in entry", entry);
+         console.error("Error: Missing required fields in entry...", entry);
         throw new Error('Missing required fields');
       }
 

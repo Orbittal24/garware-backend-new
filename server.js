@@ -3275,8 +3275,8 @@ app.post('/api/processMachineData', async (req, res) => {
         .input('shift_start', sql.DateTime2, spoolDate)
         .query(`SELECT SUM(spool_count) AS spool_count
                 FROM [RUNHOURS].[dbo].[atual_master_live] 
-                WHERE machine_no = @machine_no 
-                  AND esp = @Esp
+                WHERE actual_machine_no = @machine_no 
+                 
                   AND line_no = @line_no 
                   AND actual_date >= @shift_start`);
 
@@ -3322,8 +3322,8 @@ var lineeee = line_check.recordset[0].line_number;
         .input('shift_start', sql.DateTime2, spoolDate)
         .query(`UPDATE [RUNHOURS].[dbo].[atual_master_live]  
                 SET spool_count = 0
-                WHERE machine_no = @machine_no 
-                  AND esp = @Esp
+                WHERE actual_machine_no = @machine_no 
+                 
                   AND line_no = @line_no 
                  `);
 

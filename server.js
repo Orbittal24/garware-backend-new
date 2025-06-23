@@ -3269,7 +3269,7 @@ app.post('/api/processMachineData', async (req, res) => {
 
       // Calculate the sum of spool count from atual_master_live
       const liveCountResult = await pool.request()
-        .input('machine_no', sql.Int, machineId)
+        .input('machine_no', sql.Int, actual_machine_no)  //change machineid
         .input('Esp', sql.Int, Esp)
         .input('line_no', sql.VarChar, line_check.recordset[0].line_number)
         .input('shift_start', sql.DateTime2, spoolDate)
@@ -3316,7 +3316,7 @@ var lineeee = line_check.recordset[0].line_number;
       console.log("actual_machine_no:",actual_machine_no,lineeee, Esp,spoolDate,);
       // Reset the spool_count in atual_master_live table
       await pool.request()
-        .input('machine_no', sql.Int, machineId)
+        .input('machine_no', sql.Int, actual_machine_no) //change machineid
         .input('line_no', sql.VarChar, line_check.recordset[0].line_number)
         .input('Esp', sql.Int, Esp)
         .input('shift_start', sql.DateTime2, spoolDate)

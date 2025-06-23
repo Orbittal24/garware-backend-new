@@ -3181,7 +3181,7 @@ app.post('/api/run_hrs_Line_machine_wholeDay', async (req, res) => {
 let machineDataa = [];
 app.post('/api/processMachineData', async (req, res) => {
   const machineDataa = req.body; // This will capture the JSON data sent from Postman
-  console.log('high duration calling ************************************************************************************************');
+  console.log('high duration calling ************************************************************************************************',machineDataa);
   // Log the received data
   console.log('Data received:', machineDataa);
 

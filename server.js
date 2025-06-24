@@ -754,15 +754,15 @@ previousPulseData.pulseCount = machinePulseCount;
 
 
   const checklivecountmtr = await pool.request()
-  .input('machine_no', sql.VarChar, machineId)
+  .input('machine_no', sql.VarChar, actual_machine_no)
   .input('Esp', sql.VarChar, Esp)
   .input('line_no', sql.VarChar, Line)
   .input('shift_start', sql.DateTime2, spool_date)
  
   .query(`SELECT SUM(spool_count) AS spool_count
           FROM [RUNHOURS].[dbo].[atual_master_live] 
-          WHERE machine_no = @machine_no 
-         AND esp = @Esp
+          WHERE actual_machine_no = @machine_no 
+         
             AND line_no = @line_no 
             AND actual_date >= @shift_start 
            `);

@@ -754,7 +754,7 @@ previousPulseData.pulseCount = machinePulseCount;
 
 
   const checklivecountmtr = await pool.request()
-  .input('machine_no', sql.VarChar, actual_machine_no)
+  .input('machine_no', sql.Int, actual_machine_no)
   .input('Esp', sql.VarChar, Esp)
   .input('line_no', sql.VarChar, Line)
   .input('shift_start', sql.DateTime2, spool_date)

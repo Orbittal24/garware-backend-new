@@ -4138,7 +4138,7 @@ app.post('/api/selectSpools_linewise', async (req, res) => {
       //console.log(
         "Fetching spool summary for:",
         { lineNo, machine_no, start_time, current_date_time }
-      );
+      // );
 
       // Query 2: Fetch spool summary data
       const resultSpoolSummary = await sql.query`

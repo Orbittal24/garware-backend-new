@@ -49,7 +49,7 @@ const dbConfig = {
 
 // Check if the connection is successful or failed
 dbconn.connect().then(() => {
-  // //console.log('Database connection successful!');
+  // console.log('Database connection successful!');
 }).catch(err => {
   console.error('Database connection failed:', err);
 }).finally(() => {
@@ -79,7 +79,7 @@ app.post('/api/data', async (req, res) => {
 
   const machinesData = req.body; // Assuming it's an array of { machineId, machinePulseCount, Esp, Line }
 
-  // //console.log("Machine data:", machinesData);
+  // console.log("Machine data:", machinesData);
 
   
   try {
@@ -97,7 +97,7 @@ const pool = await sql.connect(dbConfig)
             // Case where requestData has an array `data` and a `timestamp`
             const { data, timestamp } = machinesData;
     
-            // //console.log('Processing:', data, 'with timestamp:', timestamp);
+            // console.log('Processing:', data, 'with timestamp:', timestamp);
     
             // Now data is an array, loop through it
             machinesDataArray = data.map(item => ({
@@ -120,7 +120,7 @@ const pool = await sql.connect(dbConfig)
               const timestamp = machine.timestamp; // Retrieve the timestamp
 
 
-              // //console.log('dataaaaaaaaaaaaaaaaaaaaa',machineId ,machinePulseCount);
+              // console.log('dataaaaaaaaaaaaaaaaaaaaa',machineId ,machinePulseCount);
               
               // const Line = machine.Line;
 
@@ -139,20 +139,20 @@ const pool = await sql.connect(dbConfig)
                           // const Line = line_check.recordset[0].line_number;
                           // if (line_check.recordset.length > 0) {
                           //   const Line = line_check.recordset[0].line_number;
-                          //   //console.log('Line number:', Line); 
+                          //   console.log('Line number:', Line); 
                           // } else {
-                          //   //console.log('No matching record found in mater_line_machine_esp');
+                          //   console.log('No matching record found in mater_line_machine_esp');
                           // }
 
 
                           if (line_check.recordset.length > 0) {
                             const Line = line_check.recordset[0].line_number;
-                            // //console.log('Line number:', Line);
+                            // console.log('Line number:', Line);
                         
                             const actual_machine_no = line_check.recordset[0].actual_machine_no;
-                            // //console.log('actual_machine_no:', actual_machine_no);
+                            // console.log('actual_machine_no:', actual_machine_no);
                         } else {
-                            // //console.log('No matching record found in mater_line_machine_esp');
+                            // console.log('No matching record found in mater_line_machine_esp');
                         
                             // Check if the controller ID already exists
                             const checkController = await pool.request()
@@ -167,7 +167,7 @@ const pool = await sql.connect(dbConfig)
                                     .query(`UPDATE [RUNHOURS].[dbo].[unmapped_controller] 
                                             SET status = 'unmapped', date = GETDATE() 
                                             WHERE contro_id = @esp_no`);
-                                // //console.log('Updated unmapped status for existing controller ID:', Esp);
+                                // console.log('Updated unmapped status for existing controller ID:', Esp);
                             } else {
                                 // Insert new record if not exists
                                 await pool.request()
@@ -175,7 +175,7 @@ const pool = await sql.connect(dbConfig)
                                     .input('status', sql.VarChar, 'unmapped')
                                     .query(`INSERT INTO [RUNHOURS].[dbo].[unmapped_controller] (contro_id, status, date) 
                                             VALUES (@esp_no, @status, GETDATE())`);
-                                // //console.log('Inserted new unmapped controller ID:', Esp);
+                                // console.log('Inserted new unmapped controller ID:', Esp);
                             }
 
                               // Stop further processing and return a response
@@ -191,7 +191,7 @@ const pool = await sql.connect(dbConfig)
             
                           const actual_machine_no = line_check.recordset[0].actual_machine_no;
 
-                          // //console.log(' actual_machine_no:', actual_machine_no); 
+                          // console.log(' actual_machine_no:', actual_machine_no); 
 
 // for construction
                           const construction_check = await pool.request()
@@ -208,9 +208,9 @@ const pool = await sql.connect(dbConfig)
                                       const construction = construction_check.recordset[0].construction;
                                       if (construction_check.recordset.length > 0) {
                                         const construction = construction_check.recordset[0].construction;
-                                        // //console.log('construction type:', construction); 
+                                        // console.log('construction type:', construction); 
                                       } else {
-                                        // //console.log('No matching record found in mater_line_machine_esp');
+                                        // console.log('No matching record found in mater_line_machine_esp');
                                       }
             
             
@@ -228,13 +228,13 @@ const spool_check = await pool.request()
 
             const spool_date = spool_check.recordset[0].start_time;
             const spool = spool_check.recordset[0].spool_target;
-            // //console.log("spool date:",spool_date )
-            // //console.log('spool target:', spool); 
+            // console.log("spool date:",spool_date )
+            // console.log('spool target:', spool); 
             // if (spool_check.recordset.length > 0) {
             //   const spool = spool_check.recordset[0].spool_target;
-            //   ////console.log('spool target:', spool); 
+            //   console.log('spool target:', spool); 
             // } else {
-            //   ////console.log('No matching record found in mater_line_machine_esp');
+            //   console.log('No matching record found in mater_line_machine_esp');
             // }
             
 
@@ -248,15 +248,15 @@ const localTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata
 // Convert local time to ISO 8601 format (UTC)
 const localTimeISO = localTime.toISOString();
 
-////console.log("Current Local Time in ISO Format (IST):", localTimeISO);
+console.log("Current Local Time in ISO Format (IST):", localTimeISO);
 
 // Adjust for IST manually by adding 5 hours and 30 minutes
 const istOffset = 5 * 60 * 60 * 1000 + 30 * 60 * 1000; // 5 hours 30 minutes in milliseconds
 const adjustedLocalTime = new Date(localTime.getTime() + istOffset);
 const adjustedLocalTimeISO = adjustedLocalTime.toISOString();
 
-////console.log("Adjusted Local Time in ISO Format (IST):", adjustedLocalTimeISO);
-////console.log("line.......:",Line)
+console.log("Adjusted Local Time in ISO Format (IST):", adjustedLocalTimeISO);
+console.log("line.......:",Line)
 // await pool.request()
 //     .input('line_number', sql.VarChar, Line)
 //     .input('actual_machine_no', sql.Int, actual_machine_no)
@@ -303,10 +303,10 @@ const currentHours = String(now.getHours()).padStart(2, '0');
 const currentMinutes = String(now.getMinutes()).padStart(2, '0');
 const currentSeconds = String(now.getSeconds()).padStart(2, '0');
 const currentTimeString = `${currentHours}:${currentMinutes}:${currentSeconds}`;
-////console.log("Current Time:", currentTimeString);
+console.log("Current Time:", currentTimeString);
 
 const currentDateString = now.toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
-////console.log("Current Date:", currentDateString);
+console.log("Current Date:", currentDateString);
 
 const result = await pool.request()
 .query(`SELECT * FROM [RUNHOURS].[dbo].[shift_master]`);
@@ -317,8 +317,8 @@ let currentShift = null;
 shifts.forEach(shift => {
   const startTime = shift.starttime; // Assuming shift.starttime is in "HH:MM:SS" format
   const endTime = shift.endtime; // Assuming shift.endtime is in "HH:MM:SS" format
-  ////console.log("Start Time:", startTime);
-  ////console.log("End Time:", endTime);
+  console.log("Start Time:", startTime);
+  console.log("End Time:", endTime);
 
   if (endTime < startTime) { // Shift spans midnight
     if (currentTimeString >= startTime || currentTimeString <= endTime) {
@@ -332,7 +332,7 @@ shifts.forEach(shift => {
 });
 
 if (currentShift) {
-  //console.log('Current Shift:', currentShift);
+  console.log('Current Shift:', currentShift);
 
   // Determine the correct start and end datetimes for the current shift
   let shiftStartDate = new Date(now);
@@ -362,11 +362,11 @@ if (currentShift) {
   const shiftStartDateISO = formatDate(shiftStartDate);
   const shiftEndDateISO = formatDate(shiftEndDate);
 
-  //console.log('Shift Start Date Formatted:', shiftStartDateISO);
-  //console.log('Shift End Date Formatted:', shiftEndDateISO);
+  console.log('Shift Start Date Formatted:', shiftStartDateISO);
+  console.log('Shift End Date Formatted:', shiftEndDateISO);
 
-  //console.log("Line",Line)
-  //console.log("actual_machine_no.......",actual_machine_no)
+  console.log("Line",Line)
+  console.log("actual_machine_no.......",actual_machine_no)
 // Get the calculated_in_mtr value from master_set_machine_target
 const targetResult = await pool.request()
 .input('line_no', sql.Int, Line)
@@ -376,14 +376,14 @@ const targetResult = await pool.request()
         WHERE line_no = @line_no 
           AND machine_no = @machine_no`);
 
-          //console.log('Target Result:', targetResult.recordset);
+          console.log('Target Result:', targetResult.recordset);
 if (targetResult.recordset.length === 0) {
 throw new Error('No matching entry found in master_set_machine_target');
 }
 
 const { calculate_in_mtr } = targetResult.recordset[0];
 
-//console.log('Target Result2:', targetResult.recordset);
+console.log('Target Result2:', targetResult.recordset);
 
 
 //  target   
@@ -395,12 +395,12 @@ const shiftnoResult = await pool.request()
 `);
 const shifts = shiftnoResult.recordset[0].sr_no;
 
-//console.log('shifts:', shifts);
+console.log('shifts:', shifts);
 
 
-//console.log("line",Line)
+console.log("line",Line)
 
-//console.log("machine_no",machineId)
+console.log("machine_no",machineId)
 const target = await pool.request()
 .input('machine_no', sql.Int, actual_machine_no)
 .input('line_no', sql.Int, Line)
@@ -415,7 +415,7 @@ const total_target = target.recordset[0].Target_in_mtr;
 
 
 const current_shift_target = total_target / shifts
-//console.log("current_shift_target: ",current_shift_target)
+console.log("current_shift_target: ",current_shift_target)
 
 
 
@@ -460,7 +460,7 @@ const current_shift_target = total_target / shifts
 
 
     const currentTime = new Date();
-//console.log('timeeeeeeeeeeee',currentTime);
+console.log('timeeeeeeeeeeee',currentTime);
 const currentHour1 = currentTime.getHours();
 
 if (!previousPulseCounts[machineId]) {
@@ -474,14 +474,14 @@ if (!previousPulseCounts[machineId][Esp]) {
 
 const previousPulseData = previousPulseCounts[machineId][Esp];
 
-//console.log('previousPulseData',previousPulseData)
+console.log('previousPulseData',previousPulseData)
 
 if (machinePulseCount == previousPulseData.pulseCount && machinePulseCount == 1) {   //normal insert ==1
 
   if (previousPulseData.startTime) {
     // Calculate elapsed time since startTime
     const elapsedTime = (currentTime - previousPulseData.startTime) / 1000; // in seconds
-    //console.log(`Elapsed Time: ${elapsedTime} seconds`);
+    console.log(`Elapsed Time: ${elapsedTime} seconds`);
 
 
 
@@ -493,7 +493,7 @@ if (machinePulseCount == previousPulseData.pulseCount && machinePulseCount == 1)
       if (elapsedTime > 15) {
 
 
-//console.log("Esp: ",Esp)
+console.log("Esp: ",Esp)
         await pool.request()
         .input('machine_no', sql.VarChar, machineId)
         .input('line_no', sql.VarChar, Line)
@@ -518,7 +518,7 @@ if (machinePulseCount == previousPulseData.pulseCount && machinePulseCount == 1)
                 (@machine_no, @line_no, @shift_start, @shift_end, @actual_date, @live_count, @final_live_count, @construction, @run_time, @shift_no, @Esp, @actual_machine_no,@current_shift_target, @spool_count, @spool_date)`);
     
           
-//console.log('Inserted  successfully   after  ')
+console.log('Inserted  successfully   after  ')
                 // await pool.request()
                 // .input('machine_no', sql.VarChar, machineId)
                 // .input('line_no', sql.VarChar, Line)
@@ -544,16 +544,16 @@ if (machinePulseCount == previousPulseData.pulseCount && machinePulseCount == 1)
         //   UPDATE [RUNHOURS].[dbo].[OutputTable]
         //   SET status = 'offline'
         //   WHERE MachineId = ${machineId} and CONVERT(date, entry_date) = CONVERT(date, ${currentTime})`;
-        // //console.log(`Machine ID: ${machineId} is offline`);
+        // console.log(`Machine ID: ${machineId} is offline`);
       } else{
 
-//console.log('Elapseddddddddd_time ',elapsedTime)
-//console.log('ddddddddddfffffffffffffffffff ',actual_machine_no)
+console.log('Elapseddddddddd_time ',elapsedTime)
+console.log('ddddddddddfffffffffffffffffff ',actual_machine_no)
 
 
 
-        //console.log('Updating  existing   record  successfully');
-        //console.log('dataaaaaaaaaaaaaa',actual_machine_no,Line,Esp,machinePulseCount,calculate_in_mtr);
+        console.log('Updating  existing   record  successfully');
+        console.log('dataaaaaaaaaaaaaa',actual_machine_no,Line,Esp,machinePulseCount,calculate_in_mtr);
         
         await pool.request()
   .input('machine_no', sql.Int, actual_machine_no)
@@ -602,7 +602,7 @@ if (machinePulseCount == previousPulseData.pulseCount && machinePulseCount == 1)
 else {
   // No change needed if pulse count has not increased
 
-  //console.log('No  previous  count  ');
+  console.log('No  previous  count  ');
 // await pool.request()
 //   .input('machine_no', sql.VarChar, machineId)
 //   .input('line_no', sql.VarChar, Line)
@@ -624,7 +624,7 @@ else {
 //         final_live_count = final_live_count + @calculate_in_mtr
 //   `);
 
-  // //console.log(`No pulse count increase for Machine ID: ${machineId}. No idle time update.`);
+  // console.log(`No pulse count increase for Machine ID: ${machineId}. No idle time update.`);
 }
 
 // Update the stored pulse count for the machine
@@ -634,7 +634,7 @@ previousPulseData.pulseCount = machinePulseCount;
 
 
   
-    // //console.log('Updating existing record');
+    // console.log('Updating existing record');
     // await pool.request()
     //   .input('machine_no', sql.VarChar, machineId)
     //   .input('line_no', sql.VarChar, Line)
@@ -659,10 +659,10 @@ previousPulseData.pulseCount = machinePulseCount;
 
 
     const currentTime = new Date();
-    //console.log('timeeeeeeeeeeee',currentTime);
+    console.log('timeeeeeeeeeeee',currentTime);
     const currentHour1 = currentTime.getHours();
 
-    //console.log('espppppppppppppppppppppppppppppppppp',Esp,machineId);
+    console.log('espppppppppppppppppppppppppppppppppp',Esp,machineId);
     
     if (!previousPulseCounts[machineId]) {
       previousPulseCounts[machineId] = {};
@@ -674,7 +674,7 @@ previousPulseData.pulseCount = machinePulseCount;
 
  
 
-    //console.log('Inserting new record');
+    console.log('Inserting new record');
     await pool.request()
       .input('machine_no', sql.VarChar, machineId)
       .input('line_no', sql.VarChar, Line)
@@ -704,8 +704,8 @@ previousPulseData.pulseCount = machinePulseCount;
   // shifts.forEach(shift => {
   //   const startTime = shift.starttime; // Assuming shift.starttime is in "HH:MM:SS" format
   //   const endTime = shift.endtime; // Assuming shift.endtime is in "HH:MM:SS" format
-  //   //console.log("Start shift Time:", startTime);
-  //   //console.log("End shift Time:", endTime);
+  //   console.log("Start shift Time:", startTime);
+  //   console.log("End shift Time:", endTime);
   
   //   if (endTime < startTime) { // Shift spans midnight
   //     if (currentTimeString >= startTime || currentTimeString <= endTime) {
@@ -728,12 +728,12 @@ previousPulseData.pulseCount = machinePulseCount;
 //       `);
 // const shifts = shiftnoResult.recordset[0].sr_no;
 
-// //console.log('shifts:', shifts);
+// console.log('shifts:', shifts);
 
 
-// //console.log("line",Line)
+// console.log("line",Line)
 
-// //console.log("machine_no",machineId)
+// console.log("machine_no",machineId)
 // const target = await pool.request()
 //   .input('machine_no', sql.Int, actual_machine_no)
 //   .input('line_no', sql.Int, Line)
@@ -748,9 +748,9 @@ previousPulseData.pulseCount = machinePulseCount;
 
 
 //   const current_shift_target = total_target / shifts
-//   //console.log("current_shift_target: ",current_shift_target)
-  //console.log('Shift Start Date Formatted:', shiftStartDateISO);
-  //console.log('Shift End Date Formatted:', shiftEndDateISO);
+//   console.log("current_shift_target: ",current_shift_target)
+  console.log('Shift Start Date Formatted:', shiftStartDateISO);
+  console.log('Shift End Date Formatted:', shiftEndDateISO);
 
 
   const checklivecountmtr = await pool.request()
@@ -771,7 +771,7 @@ previousPulseData.pulseCount = machinePulseCount;
    
 
 
-//console.log("spool_date",spool_date)
+console.log("spool_date",spool_date)
 const atual_master_live_count = await pool.request()
   .input('machine_no', sql.VarChar, machineId)
   .input('Esp', sql.VarChar, Esp)
@@ -794,14 +794,14 @@ const atual_master_live_count = await pool.request()
 //   AND shift_start >= @shift_start 
 //    AND spool_count > 0`);
             const  atual_master_live_countValue  =  atual_master_live_count.recordset[0]
-           //console.log("atual_master_live_count:",atual_master_live_countValue)
+           console.log("atual_master_live_count:",atual_master_live_countValue)
 
-           //console.log("calculate_in_mtr:",calculate_in_mtr)
-           //console.log("spool:",spool)
+           console.log("calculate_in_mtr:",calculate_in_mtr)
+           console.log("spool:",spool)
  // Ensure calculate_in_mtr is not 0 to avoid division by zero
  if (calculate_in_mtr > 0) {
   let calculatedMasterPulse = spool / calculate_in_mtr;  // Store the calculated value
-  //console.log("masterPulse:", calculatedMasterPulse);
+  console.log("masterPulse:", calculatedMasterPulse);
   masterPulse.push(calculatedMasterPulse); // Push the calculated value into the array
 } else {
   console.error("Error: calculate_in_mtr is zero or invalid.");
@@ -814,8 +814,8 @@ atual_master_live_count1.push(atual_master_live_countValue); //
 // Ensure masterPulse is compared as a number, not as an array
 let masterPulseValue = masterPulse[0]; // Extract the first value from the array if it's always a single value
 
-//console.log("live count", atual_master_live_count1[0].live_count,"actual_machine_no============",actual_machine_no);
-//console.log("calculatedMasterPulse", masterPulseValue);
+console.log("live count", atual_master_live_count1[0].live_count,"actual_machine_no============",actual_machine_no);
+console.log("calculatedMasterPulse", masterPulseValue);
 
 // Check the condition using the actual masterPulse value
 if (atual_master_live_count1[0].live_count >= masterPulseValue) {
@@ -838,12 +838,12 @@ if (atual_master_live_count1[0].live_count >= masterPulseValue) {
   //       AND actual_date >= @shift_start -- Adjusted to match exact shift start
   //   `);
 
-  //   //console.log("updated")
+  //   console.log("updated")
 }
 
 const actual = checklivecountmtr.recordset[0];
-//console.log("spool target final:",spool)
-//console.log("actual mtr final:",actual.spool_count,"actual_machine_no:::::::::::::::",actual_machine_no,Line)
+console.log("spool target final:",spool)
+console.log("actual mtr final:",actual.spool_count,"actual_machine_no:::::::::::::::",actual_machine_no,Line)
                   if (spool > 0) {
                     
                       const actual = checklivecountmtr.recordset[0];
@@ -860,17 +860,17 @@ const actual = checklivecountmtr.recordset[0];
             WHERE machine_no = @machine_no AND Line = @line_no
         `);
 
-        //console.log('Stausssssssssssssssssssssss',statusCheck.recordset[0].status,statusCheck.recordset.length);
+        console.log('Stausssssssssssssssssssssss',statusCheck.recordset[0].status,statusCheck.recordset.length);
         
 
     if (statusCheck.recordset.length > 0 && statusCheck.recordset[0].status === 'disabled') {
         // If the machine is disabled, only push the message
         messages.push(`Target for machine ${machineId} is completed`);
-        //console.log('Target completedddddddddddddddddd');
+        console.log('Target completedddddddddddddddddd');
         
     } else {
 
-      //console.log('just resttttttttttttttttttttttttttt');
+      console.log('just resttttttttttttttttttttttttttt');
 
         // Insert the spool_count and actual_date into the spool_summary table
         await pool.request()
@@ -887,7 +887,7 @@ const actual = checklivecountmtr.recordset[0];
                 VALUES (@machine_no, @line_no, @Esp, @shift_start, @spool_count, @construction)
             `);
 
-        //console.log(`Data inserted for machine ${machineId}`);
+        console.log(`Data inserted for machine ${machineId}`);
 
         // Reset the spool_count in atual_master_live table
         await pool.request()
@@ -903,7 +903,7 @@ const actual = checklivecountmtr.recordset[0];
                   AND line_no = @line_no
             `);
 
-        //console.log(`Spool count reset for machine ${machineId}`);
+        console.log(`Spool count reset for machine ${machineId}`);
 
         // Verify the update was successful
         const result = await pool.request()
@@ -924,12 +924,12 @@ const actual = checklivecountmtr.recordset[0];
         if (result.recordset.length > 0) {
             const updatedCount = result.recordset[0].spool_count;
             if (updatedCount === 0) {
-                //console.log('Update successful: spool_count is now 0.');
+                console.log('Update successful: spool_count is now 0.');
             } else {
-                //console.log(`Update failed: spool_count is still ${updatedCount}.`);
+                console.log(`Update failed: spool_count is still ${updatedCount}.`);
             }
         } else {
-            //console.log('No records found after update.');
+            console.log('No records found after update.');
         }
     }
                          
@@ -954,7 +954,7 @@ const actual = checklivecountmtr.recordset[0];
 
                          // Create a new request for each query
       const request = pool.request();
-//console.log("all:",Line,actual_machine_no,construction, spool_date)
+console.log("all:",Line,actual_machine_no,construction, spool_date)
       const existingEntry = await request
         .input('line_no', sql.Int, Line)
         .input('machine_no', sql.Int, actual_machine_no)
@@ -1002,7 +1002,7 @@ const actual = checklivecountmtr.recordset[0];
      
      
         } else {
-                  //console.log(`No matching plan found for Machine ID: ${machineId} and Line: ${Line}`);
+                  console.log(`No matching plan found for Machine ID: ${machineId} and Line: ${Line}`);
                   // await pool.rollback();
                   return res.status(400).json({ message: 'No matching plan found.' });
               }
@@ -1024,7 +1024,7 @@ const actual = checklivecountmtr.recordset[0];
             const timestamp = machine.timestamp; // Retrieve the timestamp
 
 
-            // //console.log('dataaaaaaaaaaaaaaaaaaaaa',machineId ,machinePulseCount);
+            // console.log('dataaaaaaaaaaaaaaaaaaaaa',machineId ,machinePulseCount);
             
 //           res.status(200).json({
 //   message: 'Data inserted/updated successfully.',
@@ -1036,18 +1036,18 @@ const actual = checklivecountmtr.recordset[0];
 
 const firstMachineData = machinesData[0];
 
-// //console.log("Type of actual:", typeof firstMachineData.actual); // Check the type of 'actual'
-// //console.log("Value of actual:", firstMachineData.actual); // Check the value of 'actual'
+// console.log("Type of actual:", typeof firstMachineData.actual); // Check the type of 'actual'
+// console.log("Value of actual:", firstMachineData.actual); // Check the value of 'actual'
 
 // Ensure 'actual' is parsed correctly as an integer
 // const actualValue = parseInt(firstMachineData.actual);
 
 
-//console.log("firstMachineData",firstMachineData)
-            //console.log(" machinesData[0]", machinesData[0])
+console.log("firstMachineData",firstMachineData)
+            console.log(" machinesData[0]", machinesData[0])
   if (parseInt(firstMachineData.actual) >= 0) {
   // If 'actual' is found, do not send this response
-  //console.log('Skipping response as "actual" is present in machineData');
+  console.log('Skipping response as "actual" is present in machineData');
 } else {
   // Send the normal response if 'actual' is not present
   return res.status(200).json({
@@ -1087,7 +1087,7 @@ const firstMachineData = machinesData[0];
 
 //   const machinesData = req.body; // Assuming it's an array of { machineId, machinePulseCount, Esp, Line }
 
-//   //console.log("Machine data:", machinesData);
+//   console.log("Machine data:", machinesData);
 
   
 //   try {
@@ -1101,7 +1101,7 @@ const firstMachineData = machinesData[0];
 //             machinesDataArray = machinesData;
 //         } else if (Array.isArray(machinesData.data)) {
 //             const { data } = machinesData;
-//             //console.log('Processing:', data);
+//             console.log('Processing:', data);
 //             machinesDataArray = data.map(item => ({
 //                 Esp: item.Esp,
 //                 machineId: item.machineId,
@@ -1120,7 +1120,7 @@ const firstMachineData = machinesData[0];
 //               const timestamp = machine.timestamp; // Retrieve the timestamp
 
 
-//               //console.log('dataaaaaaaaaaaaaaaaaaaaa',machineId ,machinePulseCount);
+//               console.log('dataaaaaaaaaaaaaaaaaaaaa',machineId ,machinePulseCount);
               
 //               // const Line = machine.Line;
 
@@ -1139,14 +1139,14 @@ const firstMachineData = machinesData[0];
 //                           const Line = line_check.recordset[0].line_number;
 //                           if (line_check.recordset.length > 0) {
 //                             const Line = line_check.recordset[0].line_number;
-//                             //console.log('Line number:', Line); 
+//                             console.log('Line number:', Line); 
 //                           } else {
-//                             //console.log('No matching record found in mater_line_machine_esp');
+//                             console.log('No matching record found in mater_line_machine_esp');
 //                           }
 
 //                           const actual_machine_no = line_check.recordset[0].actual_machine_no;
 
-//                           //console.log(' actual_machine_no:', actual_machine_no); 
+//                           console.log(' actual_machine_no:', actual_machine_no); 
 
 // // for construction
 //                           const construction_check = await pool.request()
@@ -1162,9 +1162,9 @@ const firstMachineData = machinesData[0];
 //                                       const construction = construction_check.recordset[0].construction;
 //                                       if (construction_check.recordset.length > 0) {
 //                                         const construction = construction_check.recordset[0].construction;
-//                                         //console.log('construction type:', construction); 
+//                                         console.log('construction type:', construction); 
 //                                       } else {
-//                                         //console.log('No matching record found in mater_line_machine_esp');
+//                                         console.log('No matching record found in mater_line_machine_esp');
 //                                       }
             
             
@@ -1181,13 +1181,13 @@ const firstMachineData = machinesData[0];
 
 //             const spool_date = spool_check.recordset[0].start_time;
 //             const spool = spool_check.recordset[0].spool_target;
-//             //console.log("spool date:",spool_date )
-//             //console.log('spool target:', spool); 
+//             console.log("spool date:",spool_date )
+//             console.log('spool target:', spool); 
 //             // if (spool_check.recordset.length > 0) {
 //             //   const spool = spool_check.recordset[0].spool_target;
-//             //   //console.log('spool target:', spool); 
+//             //   console.log('spool target:', spool); 
 //             // } else {
-//             //   //console.log('No matching record found in mater_line_machine_esp');
+//             //   console.log('No matching record found in mater_line_machine_esp');
 //             // }
             
 
@@ -1201,15 +1201,15 @@ const firstMachineData = machinesData[0];
 // // Convert local time to ISO 8601 format (UTC)
 // const localTimeISO = localTime.toISOString();
 
-// //console.log("Current Local Time in ISO Format (IST):", localTimeISO);
+// console.log("Current Local Time in ISO Format (IST):", localTimeISO);
 
 // // Adjust for IST manually by adding 5 hours and 30 minutes
 // const istOffset = 5 * 60 * 60 * 1000 + 30 * 60 * 1000; // 5 hours 30 minutes in milliseconds
 // const adjustedLocalTime = new Date(localTime.getTime() + istOffset);
 // const adjustedLocalTimeISO = adjustedLocalTime.toISOString();
 
-// //console.log("Adjusted Local Time in ISO Format (IST):", adjustedLocalTimeISO);
-// //console.log("line.......:",Line)
+// console.log("Adjusted Local Time in ISO Format (IST):", adjustedLocalTimeISO);
+// console.log("line.......:",Line)
 // await pool.request()
 //     .input('line_number', sql.VarChar, Line)
 //     .input('actual_machine_no', sql.Int, actual_machine_no)
@@ -1236,10 +1236,10 @@ const firstMachineData = machinesData[0];
 // const currentMinutes = String(now.getMinutes()).padStart(2, '0');
 // const currentSeconds = String(now.getSeconds()).padStart(2, '0');
 // const currentTimeString = `${currentHours}:${currentMinutes}:${currentSeconds}`;
-// //console.log("Current Time:", currentTimeString);
+// console.log("Current Time:", currentTimeString);
 
 // const currentDateString = now.toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
-// //console.log("Current Date:", currentDateString);
+// console.log("Current Date:", currentDateString);
 
 // const result = await pool.request()
 // .query(`SELECT * FROM [RUNHOURS].[dbo].[shift_master]`);
@@ -1250,8 +1250,8 @@ const firstMachineData = machinesData[0];
 // shifts.forEach(shift => {
 //   const startTime = shift.starttime; // Assuming shift.starttime is in "HH:MM:SS" format
 //   const endTime = shift.endtime; // Assuming shift.endtime is in "HH:MM:SS" format
-//   //console.log("Start Time:", startTime);
-//   //console.log("End Time:", endTime);
+//   console.log("Start Time:", startTime);
+//   console.log("End Time:", endTime);
 
 //   if (endTime < startTime) { // Shift spans midnight
 //     if (currentTimeString >= startTime || currentTimeString <= endTime) {
@@ -1265,7 +1265,7 @@ const firstMachineData = machinesData[0];
 // });
 
 // if (currentShift) {
-//   //console.log('Current Shift:', currentShift);
+//   console.log('Current Shift:', currentShift);
 
 //   // Determine the correct start and end datetimes for the current shift
 //   let shiftStartDate = new Date(now);
@@ -1295,11 +1295,11 @@ const firstMachineData = machinesData[0];
 //   const shiftStartDateISO = formatDate(shiftStartDate);
 //   const shiftEndDateISO = formatDate(shiftEndDate);
 
-//   //console.log('Shift Start Date Formatted:', shiftStartDateISO);
-//   //console.log('Shift End Date Formatted:', shiftEndDateISO);
+//   console.log('Shift Start Date Formatted:', shiftStartDateISO);
+//   console.log('Shift End Date Formatted:', shiftEndDateISO);
 
-//   //console.log("Line",Line)
-//   //console.log("actual_machine_no",actual_machine_no)
+//   console.log("Line",Line)
+//   console.log("actual_machine_no",actual_machine_no)
 // // Get the calculated_in_mtr value from master_set_machine_target
 // const targetResult = await pool.request()
 // .input('line_no', sql.Int, Line)
@@ -1309,14 +1309,14 @@ const firstMachineData = machinesData[0];
 //         WHERE line_no = @line_no 
 //           AND machine_no = @machine_no`);
 
-//           //console.log('Target Result:', targetResult.recordset);
+//           console.log('Target Result:', targetResult.recordset);
 // if (targetResult.recordset.length === 0) {
 // throw new Error('No matching entry found in master_set_machine_target');
 // }
 
 // const { calculate_in_mtr } = targetResult.recordset[0];
 
-// //console.log('Target Result2:', targetResult.recordset);
+// console.log('Target Result2:', targetResult.recordset);
 
 
 // //  target   
@@ -1328,12 +1328,12 @@ const firstMachineData = machinesData[0];
 // `);
 // const shifts = shiftnoResult.recordset[0].sr_no;
 
-// //console.log('shifts:', shifts);
+// console.log('shifts:', shifts);
 
 
-// //console.log("line",Line)
+// console.log("line",Line)
 
-// //console.log("machine_no",machineId)
+// console.log("machine_no",machineId)
 // const target = await pool.request()
 // .input('machine_no', sql.Int, actual_machine_no)
 // .input('line_no', sql.Int, Line)
@@ -1348,7 +1348,7 @@ const firstMachineData = machinesData[0];
 
 
 // const current_shift_target = total_target / shifts
-// //console.log("current_shift_target: ",current_shift_target)
+// console.log("current_shift_target: ",current_shift_target)
 
 
 
@@ -1393,7 +1393,7 @@ const firstMachineData = machinesData[0];
 
 
 //     const currentTime = new Date();
-// //console.log('timeeeeeeeeeeee',currentTime);
+// console.log('timeeeeeeeeeeee',currentTime);
 // const currentHour1 = currentTime.getHours();
 
 // if (!previousPulseCounts[machineId]) {
@@ -1407,14 +1407,14 @@ const firstMachineData = machinesData[0];
 
 // const previousPulseData = previousPulseCounts[machineId][Esp];
 
-// //console.log('previousPulseData',previousPulseData)
+// console.log('previousPulseData',previousPulseData)
 
 // if (machinePulseCount == previousPulseData.pulseCount && machinePulseCount == 1) {   //normal insert ==1
 
 //   if (previousPulseData.startTime) {
 //     // Calculate elapsed time since startTime
 //     const elapsedTime = (currentTime - previousPulseData.startTime) / 1000; // in seconds
-//     //console.log(`Elapsed Time: ${elapsedTime} seconds`);
+//     console.log(`Elapsed Time: ${elapsedTime} seconds`);
 
 
 
@@ -1426,7 +1426,7 @@ const firstMachineData = machinesData[0];
 //       if (elapsedTime > 25) {
 
 
-// //console.log("Esp: ",Esp)
+// console.log("Esp: ",Esp)
 //         await pool.request()
 //         .input('machine_no', sql.VarChar, machineId)
 //         .input('line_no', sql.VarChar, Line)
@@ -1449,7 +1449,7 @@ const firstMachineData = machinesData[0];
 //                 (@machine_no, @line_no, @shift_start, @shift_end, @actual_date, @live_count, @final_live_count, @construction, @run_time, @shift_no, @Esp, @actual_machine_no,@current_shift_target, @spool_count)`);
     
           
-// //console.log('Inserted  successfully   after  ')
+// console.log('Inserted  successfully   after  ')
 //                 // await pool.request()
 //                 // .input('machine_no', sql.VarChar, machineId)
 //                 // .input('line_no', sql.VarChar, Line)
@@ -1475,16 +1475,16 @@ const firstMachineData = machinesData[0];
 //         //   UPDATE [RUNHOURS].[dbo].[OutputTable]
 //         //   SET status = 'offline'
 //         //   WHERE MachineId = ${machineId} and CONVERT(date, entry_date) = CONVERT(date, ${currentTime})`;
-//         // //console.log(`Machine ID: ${machineId} is offline`);
+//         // console.log(`Machine ID: ${machineId} is offline`);
 //       } else{
 
-// //console.log('Elapseddddddddd_time ',elapsedTime)
-// //console.log('ddddddddddfffffffffffffffffff ',actual_machine_no)
+// console.log('Elapseddddddddd_time ',elapsedTime)
+// console.log('ddddddddddfffffffffffffffffff ',actual_machine_no)
 
 
 
-//         //console.log('Updating  existing   record  successfully');
-//         //console.log('dataaaaaaaaaaaaaa',actual_machine_no,Line,Esp,machinePulseCount,calculate_in_mtr);
+//         console.log('Updating  existing   record  successfully');
+//         console.log('dataaaaaaaaaaaaaa',actual_machine_no,Line,Esp,machinePulseCount,calculate_in_mtr);
         
 //         await pool.request()
 //   .input('machine_no', sql.Int, actual_machine_no)
@@ -1533,7 +1533,7 @@ const firstMachineData = machinesData[0];
 // else {
 //   // No change needed if pulse count has not increased
 
-//   //console.log('No  previous  count  ');
+//   console.log('No  previous  count  ');
 // // await pool.request()
 // //   .input('machine_no', sql.VarChar, machineId)
 // //   .input('line_no', sql.VarChar, Line)
@@ -1555,7 +1555,7 @@ const firstMachineData = machinesData[0];
 // //         final_live_count = final_live_count + @calculate_in_mtr
 // //   `);
 
-//   // //console.log(`No pulse count increase for Machine ID: ${machineId}. No idle time update.`);
+//   // console.log(`No pulse count increase for Machine ID: ${machineId}. No idle time update.`);
 // }
 
 // // Update the stored pulse count for the machine
@@ -1565,7 +1565,7 @@ const firstMachineData = machinesData[0];
 
 
   
-//     // //console.log('Updating existing record');
+//     // console.log('Updating existing record');
 //     // await pool.request()
 //     //   .input('machine_no', sql.VarChar, machineId)
 //     //   .input('line_no', sql.VarChar, Line)
@@ -1590,10 +1590,10 @@ const firstMachineData = machinesData[0];
 
 
 //     const currentTime = new Date();
-//     //console.log('timeeeeeeeeeeee',currentTime);
+//     console.log('timeeeeeeeeeeee',currentTime);
 //     const currentHour1 = currentTime.getHours();
 
-//     //console.log('espppppppppppppppppppppppppppppppppp',Esp,machineId);
+//     console.log('espppppppppppppppppppppppppppppppppp',Esp,machineId);
     
 //     if (!previousPulseCounts[machineId]) {
 //       previousPulseCounts[machineId] = {};
@@ -1605,7 +1605,7 @@ const firstMachineData = machinesData[0];
 
  
 
-//     //console.log('Inserting new record');
+//     console.log('Inserting new record');
 //     await pool.request()
 //       .input('machine_no', sql.VarChar, machineId)
 //       .input('line_no', sql.VarChar, Line)
@@ -1633,8 +1633,8 @@ const firstMachineData = machinesData[0];
 //   // shifts.forEach(shift => {
 //   //   const startTime = shift.starttime; // Assuming shift.starttime is in "HH:MM:SS" format
 //   //   const endTime = shift.endtime; // Assuming shift.endtime is in "HH:MM:SS" format
-//   //   //console.log("Start shift Time:", startTime);
-//   //   //console.log("End shift Time:", endTime);
+//   //   console.log("Start shift Time:", startTime);
+//   //   console.log("End shift Time:", endTime);
   
 //   //   if (endTime < startTime) { // Shift spans midnight
 //   //     if (currentTimeString >= startTime || currentTimeString <= endTime) {
@@ -1657,12 +1657,12 @@ const firstMachineData = machinesData[0];
 // //       `);
 // // const shifts = shiftnoResult.recordset[0].sr_no;
 
-// // //console.log('shifts:', shifts);
+// // console.log('shifts:', shifts);
 
 
-// // //console.log("line",Line)
+// // console.log("line",Line)
 
-// // //console.log("machine_no",machineId)
+// // console.log("machine_no",machineId)
 // // const target = await pool.request()
 // //   .input('machine_no', sql.Int, actual_machine_no)
 // //   .input('line_no', sql.Int, Line)
@@ -1677,9 +1677,9 @@ const firstMachineData = machinesData[0];
 
 
 // //   const current_shift_target = total_target / shifts
-// //   //console.log("current_shift_target: ",current_shift_target)
-//   //console.log('Shift Start Date Formatted:', shiftStartDateISO);
-//   //console.log('Shift End Date Formatted:', shiftEndDateISO);
+// //   console.log("current_shift_target: ",current_shift_target)
+//   console.log('Shift Start Date Formatted:', shiftStartDateISO);
+//   console.log('Shift End Date Formatted:', shiftEndDateISO);
 
 
 //   const checklivecountmtr = await pool.request()
@@ -1699,7 +1699,7 @@ const firstMachineData = machinesData[0];
 //            const actual = checklivecountmtr.recordset[0];
 //            const actual1= actual.spool_count[0]
 
-//                       //console.log('dataaaaaaaaaaaaaaaaaaaa',spool,actual1);
+//                       console.log('dataaaaaaaaaaaaaaaaaaaa',spool,actual1);
                                 
 //                   if (spool > 0) {
 //                       const actual = checklivecountmtr.recordset[0];
@@ -1728,7 +1728,7 @@ const firstMachineData = machinesData[0];
 
 //                          // Create a new request for each query
 //       const request = pool.request();
-// //console.log("all:",Line,actual_machine_no,construction, spool_date)
+// console.log("all:",Line,actual_machine_no,construction, spool_date)
 //       const existingEntry = await request
 //         .input('line_no', sql.Int, Line)
 //         .input('machine_no', sql.Int, actual_machine_no)
@@ -1776,7 +1776,7 @@ const firstMachineData = machinesData[0];
      
      
 //         } else {
-//                   //console.log(`No matching plan found for Machine ID: ${machineId} and Line: ${Line}`);
+//                   console.log(`No matching plan found for Machine ID: ${machineId} and Line: ${Line}`);
 //                   // await pool.rollback();
 //                   return res.status(400).json({ message: 'No matching plan found.' });
 //               }
@@ -1801,7 +1801,7 @@ const firstMachineData = machinesData[0];
 // backup of update construction
 // app.post('/api/updateConstruction', async (req, res) => {
 //   const { line_no, machine_no, construction, start_time, end_time } = req.body;
-//   //console.log("data received:", line_no, machine_no, construction, start_time, end_time)
+//   console.log("data received:", line_no, machine_no, construction, start_time, end_time)
 
 //   if (!line_no || !machine_no || !construction || !start_time || !end_time) {
 //     return res.status(400).send('Missing required fields');
@@ -1829,7 +1829,7 @@ const firstMachineData = machinesData[0];
 //     request.input('end_time', sql.DateTime2, end_time);
 
 //     const result = await request.query(query);
-//     //console.log("update result:", result)
+//     console.log("update result:", result)
 
 
 //      // Insert the received data into the master_update_production table
@@ -1840,7 +1840,7 @@ const firstMachineData = machinesData[0];
 //    `;
 
 //    const insertResult = await request.query(insertQuery);
-//    //console.log("Insert result:", insertResult);
+//    console.log("Insert result:", insertResult);
 
 
 //     res.status(200).send('Update successful');
@@ -1851,7 +1851,7 @@ const firstMachineData = machinesData[0];
 // });
 
 app.post('/api/updateConstruction', async (req, res) => {
-  //console.log('Request body:', req.body); // Log the entire request body for debugging
+  console.log('Request body:', req.body); // Log the entire request body for debugging
 
   const entries = req.body;
 
@@ -1864,7 +1864,7 @@ app.post('/api/updateConstruction', async (req, res) => {
 
     for (const entry of entries) {
       const { line_no, machine_no, construction, start_time, end_time } = entry;
-      //console.log("Data received:", line_no, machine_no, construction, start_time, end_time); // Log each entry for debugging
+      console.log("Data received:", line_no, machine_no, construction, start_time, end_time); // Log each entry for debugging
 
       if (!line_no || !machine_no || !construction || !start_time || !end_time) {
         throw new Error('Missing required fields');
@@ -1929,10 +1929,10 @@ const PI = Math.PI;
 // Calculate meters per pulse from pulley diameter
 app.post('/api/calculate_target_mtr', async (req, res) => {
   const entries = req.body;
-  //console.log("receive data....",req.body)
+  console.log("receive data....",req.body)
 
   if (!Array.isArray(entries) || entries.length === 0) {
-    //console.log("Entries should be a non-empty array")
+    console.log("Entries should be a non-empty array")
     return res.status(400).send('Entries should be a non-empty array');
   }
 
@@ -1949,7 +1949,7 @@ app.post('/api/calculate_target_mtr', async (req, res) => {
   // entry.rpm = Number(entry.rpm);
       
       const { line_no, machine_no, pulley_diameter, entry_date, target_in_mtr, rpm } = entry;
-//console.log("entry......",entry)
+console.log("entry......",entry)
       // if (!line_no || !machine_no || !pulley_diameter || !entry_date || !target_in_mtr || !rpm) {
       //    console.error("Error: Missing required fields in entry...", entry);
       //   throw new Error('Missing required fields');
@@ -1969,17 +1969,17 @@ app.post('/api/calculate_target_mtr', async (req, res) => {
 
  // Convert pulley diameter from mm to inches
       const pulley_diameter_inches = pulley_diameter * MM_TO_INCH;
- //console.log("pulley_diameter_inches",pulley_diameter_inches);
+ console.log("pulley_diameter_inches",pulley_diameter_inches);
 
       
       // Calculate circumference in inches
       const circumference_in_inches = PI * pulley_diameter_inches;
- //console.log("circumference_in_inches",circumference_in_inches);
+ console.log("circumference_in_inches",circumference_in_inches);
 
       
       // Convert circumference to meters
       const calculate_in_mtrr = circumference_in_inches * INCH_TO_METER;
- //console.log("calculate_in_mtrr",calculate_in_mtrr);
+ console.log("calculate_in_mtrr",calculate_in_mtrr);
 
 
       calculate_in_mtr = calculate_in_mtrr   // comment if need to add correction comment
@@ -1987,11 +1987,11 @@ app.post('/api/calculate_target_mtr', async (req, res) => {
       // uncomment if need to add correction comment
 // calculate_in_mtr1 = calculate_in_mtrr + 0.007
 //       calculate_in_mtr = calculate_in_mtr1 
-//       //console.log("calculte in mtrafter factorss",calculate_in_mtr);
+//       console.log("calculte in mtrafter factorss",calculate_in_mtr);
 
       // Round to three decimal places
 // const rounded_calculate_in_mtr = Math.round(calculate_in_mtr * 1000) / 1000;
-//        //console.log("rounded_calculate_in_mtr",rounded_calculate_in_mtr);
+//        console.log("rounded_calculate_in_mtr",rounded_calculate_in_mtr);
 
       
       // Calculate circumference in inches
@@ -2059,7 +2059,7 @@ app.post('/api/calculate_target_mtr', async (req, res) => {
 app.post('/api/construction_length_counters', async (req, res) => {
   const entries = req.body;
 
-  //console.log('Received request body:', req.body);
+  console.log('Received request body:', req.body);
 
   if (!Array.isArray(entries) || entries.length === 0) {
     return res.status(400).json({ message: 'Request body should be a non-empty array' });
@@ -2095,7 +2095,7 @@ app.post('/api/construction_length_counters', async (req, res) => {
 
       const mtr_kg = result1.recordset[0].meter_per_kg;
 
-      //console.log("mtr_kg:", mtr_kg);
+      console.log("mtr_kg:", mtr_kg);
 
       // Query to get total live count
       const query = `
@@ -2115,7 +2115,7 @@ app.post('/api/construction_length_counters', async (req, res) => {
       }
 
       const mtr = result.recordset[0].totalLiveCount;
-      //console.log("mtr:", mtr);
+      console.log("mtr:", mtr);
 
       // Ensure mtr_kg and mtr are valid numbers before dividing
       if (mtr === 0) {
@@ -2124,7 +2124,7 @@ app.post('/api/construction_length_counters', async (req, res) => {
       }
 
       const kg = mtr_kg / mtr;
-      //console.log("kg:", kg);
+      console.log("kg:", kg);
 
       // Format mtr and kg
       const mtrFormatted = mtr.toFixed(2);
@@ -2168,7 +2168,7 @@ app.post('/api/construction_length_counters', async (req, res) => {
 app.post('/api/run_hrs_all_line_shift', async (req, res) => {
   const dates = req.body; // Expecting an array of dates
 
-  //console.log('Received request body:', req.body);
+  console.log('Received request body:', req.body);
 
   if (!Array.isArray(dates) || dates.length === 0) {
     return res.status(400).json({ message: 'Request body should be a non-empty array' });
@@ -2309,7 +2309,7 @@ app.post('/api/run_hrs_all_line_shift', async (req, res) => {
 // app.post('/api/run_hrs_One_line_shift', async (req, res) => {
 //   const { dataArray } = req.body; // Expecting an array of objects with 'date' and 'Line'
 
-//   // //console.log('Received request body:', req.body);
+//   // console.log('Received request body:', req.body);
 
 //   try {
 //     // Connect to the database
@@ -2319,7 +2319,7 @@ app.post('/api/run_hrs_all_line_shift', async (req, res) => {
 
 //     // Iterate through each item in the dataArray
 //     for (const { date, Line } of dataArray) {
-//       // //console.log(`Processing Line: ${Line} for Date: ${date}`);
+//       // console.log(`Processing Line: ${Line} for Date: ${date}`);
 
 //       // Capture the current local time
 //       const now = new Date();
@@ -2328,7 +2328,7 @@ app.post('/api/run_hrs_all_line_shift', async (req, res) => {
 //       const currentMinutes = String(now.getMinutes()).padStart(2, '0');
 //       const currentSeconds = String(now.getSeconds()).padStart(2, '0');
 //       const currentTimeString = `${currentHours}:${currentMinutes}:${currentSeconds}`;
-//       // //console.log("Current Time:", currentTimeString);
+//       // console.log("Current Time:", currentTimeString);
 
 //       const result = await pool.request().query(`SELECT * FROM [RUNHOURS].[dbo].[shift_master]`);
 //       const shifts = result.recordset;
@@ -2378,8 +2378,8 @@ app.post('/api/run_hrs_all_line_shift', async (req, res) => {
 //         const shiftStartDateISO = formatDate(shiftStartDate);
 //         const shiftEndDateISO = formatDate(shiftEndDate);
 
-//         //console.log('Shift Start Date Formatted:', shiftStartDateISO);
-//         //console.log('Shift End Date Formatted:', shiftEndDateISO);
+//         console.log('Shift Start Date Formatted:', shiftStartDateISO);
+//         console.log('Shift End Date Formatted:', shiftEndDateISO);
 
 //         let liveCountData = await pool.request()
 //           .input('date1', sql.DateTime, shiftStartDateISO)
@@ -2612,8 +2612,8 @@ app.post('/api/run_hrs_One_line_shift', async (req, res) => {
             const latestRecord = latestEntriesData.recordset.find(l => l.actual_machine_no === totalRecord.actual_machine_no);
             const spoolRecord = spoolTargetData.recordset.find(s => s.machine_no == totalRecord.actual_machine_no);
 
-//console.log('Total Record:', totalRecord);
-    //console.log('Spool Record:', spoolRecord);
+console.log('Total Record:', totalRecord);
+    console.log('Spool Record:', spoolRecord);
 
 
             const runTimeInSeconds = totalRecord.totalrun_time;
@@ -2664,7 +2664,7 @@ app.post('/api/run_hrs_One_line_shift', async (req, res) => {
 app.post('/api/line_machine_construction_wholeday', async (req, res) => {
   const { line, machine, actualDates } = req.body; // Expecting line, machine, and a single date string
 
-  //console.log('Received request body:', req.body);
+  console.log('Received request body:', req.body);
 
   try {
     // Connect to the database
@@ -2675,7 +2675,7 @@ app.post('/api/line_machine_construction_wholeday', async (req, res) => {
 
     // Process the single date
     const actualDate = actualDates;
-    //console.log(`Processing date: ${actualDate} for line: ${line} and machine: ${machine}`);
+    console.log(`Processing date: ${actualDate} for line: ${line} and machine: ${machine}`);
 
     // Fetch construction data for the specific date, line, and machine
     const constructionn = await pool.request()
@@ -2691,7 +2691,7 @@ app.post('/api/line_machine_construction_wholeday', async (req, res) => {
         GROUP BY line_no, construction
       `);
 
-    //console.log("Construction for lines for the whole day: ", constructionn.recordset);
+    console.log("Construction for lines for the whole day: ", constructionn.recordset);
 
     // Prepare a list of constructions for the query
     const constructions = constructionn.recordset.map(row => `'${row.construction}'`).join(',');
@@ -2704,7 +2704,7 @@ app.post('/api/line_machine_construction_wholeday', async (req, res) => {
     `;
 
     const meterPerKgResults = await pool.request().query(query);
-    //console.log("Meter per kg for various constructions: ", meterPerKgResults.recordset);
+    console.log("Meter per kg for various constructions: ", meterPerKgResults.recordset);
 
     // Fetch the live count data based on the provided date, line, and machine
     const liveCountData = await pool.request()
@@ -2720,7 +2720,7 @@ app.post('/api/line_machine_construction_wholeday', async (req, res) => {
         GROUP BY line_no, construction
       `);
 
-    //console.log("Live Count Data: ", liveCountData.recordset);
+    console.log("Live Count Data: ", liveCountData.recordset);
 
     // Convert final_live_mtr (meters) into kilograms
     const conversionResults = liveCountData.recordset.map(record => {
@@ -2755,7 +2755,7 @@ app.post('/api/line_machine_construction_wholeday', async (req, res) => {
       });
     }
 
-    //console.log("Final Results:", results);
+    console.log("Final Results:", results);
 
     // Send the response with the calculated data
     res.status(200).json({
@@ -2779,7 +2779,7 @@ app.post('/api/line_machine_construction_wholeday', async (req, res) => {
 app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
   const { actualDates } = req.body; // Expecting an array of actualDates
 
-  //console.log('Received request body:', req.body);
+  console.log('Received request body:', req.body);
 
   try {
     // Connect to the database
@@ -2790,7 +2790,7 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
 
     // Iterate over the array of dates
     for (const actualDate of actualDates) {
-      //console.log(`Processing date: ${actualDate}`);
+      console.log(`Processing date: ${actualDate}`);
 
       // Fetch construction data for the specific date
       const constructionn = await pool.request()
@@ -2802,7 +2802,7 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
           GROUP BY line_no, construction
         `);
 
-      //console.log("Construction for lines for whole day: ", constructionn.recordset);
+      console.log("Construction for lines for whole day: ", constructionn.recordset);
 
       // Prepare a list of constructions for the query
       const constructions = constructionn.recordset.map(row => `'${row.construction}'`).join(',');
@@ -2815,7 +2815,7 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
       `;
 
       const meterPerKgResults = await pool.request().query(query);
-      //console.log("Meter per kg for various constructions: ", meterPerKgResults.recordset);
+      console.log("Meter per kg for various constructions: ", meterPerKgResults.recordset);
 
       // Fetch the live count data based on the provided date
       const liveCountData = await pool.request()
@@ -2827,7 +2827,7 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
           GROUP BY line_no, construction
         `);
 
-      //console.log("Live Count Data: ", liveCountData.recordset);
+      console.log("Live Count Data: ", liveCountData.recordset);
 
       // Object to store total final_live_kg and final_live_mtr for each line_no
       let lineWiseTotals = {};
@@ -2885,7 +2885,7 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
       }
     }
 
-    //console.log("Final Results:", results);
+    console.log("Final Results:", results);
 
     // Send the response with the calculated run hours and total kg for each line across all dates
     res.status(200).json({
@@ -2910,7 +2910,7 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
 // app.post('/api/run_hrs_Line_machine_wholeDay', async (req, res) => {
 //   const { dataArray } = req.body; // Expecting an array of objects with 'date' and 'Line'
 
-//   //console.log('Received request body:', req.body);
+//   console.log('Received request body:', req.body);
 
 //   try {
 //     // Connect to the database
@@ -2920,7 +2920,7 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
 
 //     // Iterate through each item in the dataArray
 //     for (const { actualDate, Line } of dataArray) {
-//       //console.log(`Processing Line: ${Line} for Date: ${actualDate}`);
+//       console.log(`Processing Line: ${Line} for Date: ${actualDate}`);
 
     
 
@@ -3034,7 +3034,7 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
 app.post('/api/run_hrs_Line_machine_wholeDay', async (req, res) => {
   const { dataArray } = req.body; // Expecting an array of objects with 'actualDate' and 'Line'
 
-  //console.log('Received request body:', req.body);
+  console.log('Received request body:', req.body);
 
   try {
     // Connect to the database
@@ -3044,7 +3044,7 @@ app.post('/api/run_hrs_Line_machine_wholeDay', async (req, res) => {
 
     // Iterate through each item in the dataArray
     for (const { actualDate, Line } of dataArray) {
-      //console.log(`Processing Line: ${Line} for Date: ${actualDate}`);
+      console.log(`Processing Line: ${Line} for Date: ${actualDate}`);
 
       let liveCountData = await pool.request()
         .input('actualDate', sql.DateTime, actualDate)
@@ -3183,7 +3183,7 @@ app.post('/api/processMachineData', async (req, res) => {
   const machineDataa = req.body; // This will capture the JSON data sent from Postman
   console.log('high duration calling ************************************************************************************************',machineDataa);
   // Log the received data
-  //console.log('Data received:', machineDataa);
+  console.log('Data received:', machineDataa);
 
   try {
     let machinesDataArray;
@@ -3228,7 +3228,7 @@ app.post('/api/processMachineData', async (req, res) => {
       }
 
       const actual_machine_no = line_check.recordset[0].actual_machine_no;
-      //console.log('Actual machine number:', actual_machine_no); 
+      console.log('Actual machine number:', actual_machine_no); 
 
       // Fetch construction from master_set_production table
       const construction_check = await pool.request()
@@ -3311,9 +3311,9 @@ app.post('/api/processMachineData', async (req, res) => {
       //           (machine_no, line_no, Esp, shift_start, spool_count, construction) 
       //           VALUES (@machine_no, @line_no, @Esp, @shift_start, @spool_count, @construction)`);
 
-      //console.log(`Data inserted for machine ${machineId}`);
+      console.log(`Data inserted for machine ${machineId}`);
 var lineeee = line_check.recordset[0].line_number;
-      //console.log("actual_machine_no:",actual_machine_no,lineeee, Esp,spoolDate,);
+      console.log("actual_machine_no:",actual_machine_no,lineeee, Esp,spoolDate,);
       // Reset the spool_count in atual_master_live table
       await pool.request()
         .input('machine_no', sql.Int, actual_machine_no) //change machineid
@@ -3370,7 +3370,7 @@ var lineeee = line_check.recordset[0].line_number;
 app.post('/api/calculateOEEAllPlant', async (req, res) => {
   const dataArray = req.body;
 
-  //console.log('Received request body:  for  calculateOEEAllPlant', dataArray);
+  console.log('Received request body:  for  calculateOEEAllPlant', dataArray);
 
   try {
     // Connect to the database
@@ -3385,18 +3385,18 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
       FROM [RUNHOURS].[dbo].[shift_master]
     `);
 
-    //console.log("Total time  Planned Production Time:", variable1);
+    console.log("Total time  Planned Production Time:", variable1);
     if (shiftData.recordset.length === 0) {
       res.status(404).json({ message: 'No shift data found.' });
       return;
     }
 
     const { tea_time, lunch_time } = shiftData.recordset[0];
-    //console.log("tea_time + lunch_time:", tea_time, lunch_time);
+    console.log("tea_time + lunch_time:", tea_time, lunch_time);
     // const variable2 = variable1 - (tea_time + lunch_time);
-     // //console.log("Total time - (tea_time + lunch_time):", variable2);
+     // console.log("Total time - (tea_time + lunch_time):", variable2);
     const variable2 = 73800 / 3600;;
-     //console.log("variable2  Actual Production Time", variable2);
+     console.log("variable2  Actual Production Time", variable2);
    
 
     // Calculate Availability
@@ -3421,7 +3421,7 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
 
       // const variable3 = targetData.recordset[0].totalTarget;
        const variable3 = 72000 / 3600;
-      //console.log("master run time hr:", variable3);
+      console.log("master run time hr:", variable3);
 
       // Select live count data based on the shift start and end times
       const liveCountData = await pool.request()
@@ -3442,25 +3442,25 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
       
       const total_runtime = liveCountData.recordset[0].totalLiveCount;
         const hours = total_runtime / 3600;
-        //console.log("hours:", hours);
+        console.log("hours:", hours);
         const variable4 = hours / 24;
-      //console.log("variable4:calculateOEEAllPlant", variable4);
-      // //console.log("actual run hr seconds:", variable4);
+      console.log("variable4:calculateOEEAllPlant", variable4);
+      // console.log("actual run hr seconds:", variable4);
       const performance1 = variable4 / variable3;
       const performance = performance1 * 100;
 
       // Calculate Quality
       const variable5 = 0.99 * variable4;
-      //console.log("quality....:", variable5);
+      console.log("quality....:", variable5);
       const quality1 = variable5 / variable4;
       const quality = quality1 * 100;
       // Calculate OEE as a percentage
       const oee = (availability1 * performance1 * quality1) * 100;
 
-      //console.log('Availability:', availability1);
-      //console.log('Performance:', performance1);
-      //console.log('Quality:', quality1);
-      //console.log('OEE:', oee);
+      console.log('Availability:', availability1);
+      console.log('Performance:', performance1);
+      console.log('Quality:', quality1);
+      console.log('OEE:', oee);
 
       results.push({
         date1,
@@ -3495,7 +3495,7 @@ app.post('/api/calculateOEEAllPlant', async (req, res) => {
 app.post('/api/calculateOEELineWise', async (req, res) => {
   const dataArray = req.body;
 
-  //console.log('Received request body: for calculateOEELineWise', dataArray);
+  console.log('Received request body: for calculateOEELineWise', dataArray);
 
   try {
     // Connect to the database
@@ -3510,18 +3510,18 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
       FROM [RUNHOURS].[dbo].[shift_master]
     `);
 
-    //console.log("Total time  Planned Production Time:", variable1);
+    console.log("Total time  Planned Production Time:", variable1);
     if (shiftData.recordset.length === 0) {
       res.status(404).json({ message: 'No shift data found.' });
       return;
     }
 
     const { tea_time, lunch_time } = shiftData.recordset[0];
-    //console.log("tea_time + lunch_time:", tea_time, lunch_time);
+    console.log("tea_time + lunch_time:", tea_time, lunch_time);
     // const variable2 = variable1 - (tea_time + lunch_time);
       const variable2 = 73800 / 3600;;
-     //console.log("variable2  Actual Production Time", variable2);
-    // //console.log("variable2:", variable2);
+     console.log("variable2  Actual Production Time", variable2);
+    // console.log("variable2:", variable2);
 
     // Calculate Availability
     const availability1 = variable2 / variable1;
@@ -3548,8 +3548,8 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
       // const variable3 = targetData.recordset[0].totalTarget;
      
        const variable3 = 72000 / 3600;
-      //console.log("master run time hr:", variable3);
-      //console.log("variable3:", variable3);
+      console.log("master run time hr:", variable3);
+      console.log("variable3:", variable3);
 
       // Select live count data based on the shift start and end times
       const liveCountData = await pool.request()
@@ -3571,23 +3571,23 @@ app.post('/api/calculateOEELineWise', async (req, res) => {
 
       const total_runtime = liveCountData.recordset[0].totalLiveCount;
      const hours = total_runtime / 3600;
-       //console.log("hours", hours);
+       console.log("hours", hours);
         const variable4 = hours / 24;
-      //console.log("variable4:calculateOEELineWise", variable4);
+      console.log("variable4:calculateOEELineWise", variable4);
       const performance1 = variable4 / variable3;
       const performance = performance1 * 100;
       // Calculate Quality
       const variable5 = 0.99 * variable4;
-      //console.log("variable5:", variable5);
+      console.log("variable5:", variable5);
       const quality1 = variable5 / variable4;
       const quality = quality1 * 100;
       // Calculate OEE as a percentage
       const oee = (availability1 * performance1 * quality1) * 100;
 
-      //console.log('Availability:', availability1);
-      //console.log('Performance:', performance1);
-      //console.log('Quality:', quality1);
-      //console.log('OEE:', oee);
+      console.log('Availability:', availability1);
+      console.log('Performance:', performance1);
+      console.log('Quality:', quality1);
+      console.log('OEE:', oee);
 
       results.push({
         date1,
@@ -3640,7 +3640,7 @@ const verifyToken = (req, res, next) => {
 // app.post('/api/calculateOEELine_machine', verifyToken, async (req, res) => {
 //   const { date1, date2, Line, machine } = req.body;
   
-//   //console.log('Received request body:', req.body);
+//   console.log('Received request body:', req.body);
   
 //   try {
 //     // Connect to the database
@@ -3656,16 +3656,16 @@ const verifyToken = (req, res, next) => {
 //         FROM [RUNHOURS].[dbo].[shift_master]
 //       `);
 
-//     //console.log("variable1:", variable1);
+//     console.log("variable1:", variable1);
 //     if (shiftData.recordset.length === 0) {
 //       res.status(404).json({ message: 'No shift data found.' });
 //       return;
 //     }
 
 //     const { tea_time, lunch_time } = shiftData.recordset[0];
-//     //console.log("tea_time + lunch_time:", tea_time, lunch_time);
+//     console.log("tea_time + lunch_time:", tea_time, lunch_time);
 //     const variable2 = variable1 - (tea_time + lunch_time);
-//     //console.log("variable2:", variable2);
+//     console.log("variable2:", variable2);
 
 //     // Calculate Availability
 //     const availability = variable2 / variable1;
@@ -3686,7 +3686,7 @@ const verifyToken = (req, res, next) => {
 //     }
 
 //     const variable3 = targetData.recordset[0].totalTarget;
-//     //console.log("variable3:", variable3);
+//     console.log("variable3:", variable3);
 
 //     // Select live count data based on the shift start and end times
 //     const liveCountData = await pool.request()
@@ -3709,21 +3709,21 @@ const verifyToken = (req, res, next) => {
 //     }
 
 //     const variable4 = liveCountData.recordset[0].totalLiveCount;
-//     //console.log("variable4:", variable4);
+//     console.log("variable4:", variable4);
 //     const performance = variable4 / variable3;
 
 //     // Calculate Quality
 //     const variable5 = 0.9 * variable4;
-//     //console.log("variable5:", variable5);
+//     console.log("variable5:", variable5);
 //     const quality = variable5 / variable4;
 
 //     // Calculate OEE as a percentage
 //     const oee = (availability * performance * quality) * 100;
 
-//     //console.log('Availability:', availability);
-//     //console.log('Performance:', performance);
-//     //console.log('Quality:', quality);
-//     //console.log('OEE:', oee);
+//     console.log('Availability:', availability);
+//     console.log('Performance:', performance);
+//     console.log('Quality:', quality);
+//     console.log('OEE:', oee);
 
 //     res.status(200).json({ 
 //       message: 'OEE calculations completed successfully. | Machine Wise',
@@ -3749,7 +3749,7 @@ const verifyToken = (req, res, next) => {
 app.post('/api/calculateOEELine_machine',  async (req, res) => {
   const dataArray = req.body;  // Expecting an array of objects with date1, date2, Line, and machine
   
-  //console.log('Received request body: for calculateOEELine_machine', dataArray);
+  console.log('Received request body: for calculateOEELine_machine', dataArray);
   
   try {
     // Connect to the database
@@ -3765,18 +3765,18 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
         FROM [RUNHOURS].[dbo].[shift_master]
       `);
 
-    //console.log("Total time  Planned Production Time:", variable1);
+    console.log("Total time  Planned Production Time:", variable1);
     if (shiftData.recordset.length === 0) {
       res.status(404).json({ message: 'No shift data found.' });
       return;
     }
 
     const { tea_time, lunch_time } = shiftData.recordset[0];
-    //console.log("tea_time + lunch_time:", tea_time, lunch_time);
+    console.log("tea_time + lunch_time:", tea_time, lunch_time);
     // const variable2 = variable1 - (tea_time + lunch_time);
-    // //console.log("variable2:", variable2);
+    // console.log("variable2:", variable2);
       const variable2 = 73800 / 3600;
-     //console.log("variable2  Actual Production Time", variable2);
+     console.log("variable2  Actual Production Time", variable2);
 
     // Array to store results for each set of inputs
     const results = [];
@@ -3812,7 +3812,7 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
 
       // const variable3 = targetData.recordset[0].totalTarget;
        const variable3 = 72000 / 3600;
-      //console.log("master run time hr:", variable3);
+      console.log("master run time hr:", variable3);
      
 
       // Select live count data based on the shift start and end times
@@ -3844,24 +3844,24 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
       const total_runtime = liveCountData.recordset[0].totalLiveCount;
       
         const variable4 = total_runtime / 3600;
-      //console.log("variable4:calculateOEELine_machine", variable4);
+      console.log("variable4:calculateOEELine_machine", variable4);
      
       const performance1 = variable4 / variable3;
       const performance = performance1 * 100;
 
       // Calculate Quality
       const variable5 = 0.99 * variable4;
-      //console.log("variable5:", variable5);
+      console.log("variable5:", variable5);
       const quality1 = variable5 / variable4;
       const quality = quality1 * 100;
 
       // Calculate OEE as a percentage
       const oee = (availability1 * performance1 * quality1) * 100;
 
-      //console.log('Availability:', availability1);
-      //console.log('Performance:', performance1);
-      //console.log('Quality:', quality1);
-      //console.log('OEE:', oee);
+      console.log('Availability:', availability1);
+      console.log('Performance:', performance1);
+      console.log('Quality:', quality1);
+      console.log('OEE:', oee);
 
       // Push the result for the current iteration
       results.push({
@@ -3894,7 +3894,7 @@ app.post('/api/calculateOEELine_machine',  async (req, res) => {
 app.post('/api/wholeday_masterspool_target', async (req, res) => {
   const dataArray = req.body;
 
-  //console.log('Received request body:', dataArray);
+  console.log('Received request body:', dataArray);
 
   try {
     // Connect to the database
@@ -3981,7 +3981,7 @@ app.post('/api/wholeday_masterspool_target', async (req, res) => {
 // // FOR SPOOLS COUNT
 // app.post('/api/selectSpools_linewise', async (req, res) => {
 //   const { lineNo, current_date_time } = req.body;
-// //console.log("received body ",req.body)
+// console.log("received body ",req.body)
 //   if (!lineNo || !current_date_time) {
 //     return res.status(400).json({ error: "lineNo and current_date_time are required" });
 //   }
@@ -4025,7 +4025,7 @@ app.post('/api/wholeday_masterspool_target', async (req, res) => {
 //     for (let entry of latestEntries) {
 //       const start_time = entry.start_time;
 //         const machine_no = entry.machine_no;
-// //console.log("start time of construction ",start_time,lineNo,current_date_time,machine_no)
+// console.log("start time of construction ",start_time,lineNo,current_date_time,machine_no)
 //       // 2nd Query: Select spool_summary data for each machine with actual_date >= start_time and actual_date <= current_date_time
 //       const resultSpoolSummary = await sql.query`
 //    SELECT 
@@ -4088,7 +4088,7 @@ app.post('/api/wholeday_masterspool_target', async (req, res) => {
 app.post('/api/selectSpools_linewise', async (req, res) => {
   const { lineNo, current_date_time } = req.body;
 
-  //console.log("Received body:", req.body);
+  console.log("Received body:", req.body);
 
   // Validate required fields
   if (!lineNo || !current_date_time) {
@@ -4135,7 +4135,7 @@ app.post('/api/selectSpools_linewise', async (req, res) => {
     for (let entry of latestEntries) {
       const { start_time, machine_no } = entry;
 
-      //console.log(
+      console.log(
         "Fetching spool summary for:",
         { lineNo, machine_no, start_time, current_date_time }
       // );
@@ -4192,7 +4192,7 @@ app.post('/api/selectSpools_linewise', async (req, res) => {
 
 app.post('/api/selectSpools_machinewise', async (req, res) => {
   const { lineNo, current_date_time, machineNo } = req.body;
-//console.log("received body",  req.body)
+console.log("received body",  req.body)
   // Validate that lineNo, current_date_time, and machineNo are provided
   if (!lineNo || !current_date_time || !machineNo) {
     return res.status(400).json({ error: "lineNo, current_date_time, and machineNo are required" });
@@ -4236,7 +4236,7 @@ app.post('/api/selectSpools_machinewise', async (req, res) => {
     // Loop through the latest entries and fetch spool data for each machine
     for (let entry of latestEntries) {
       const start_time = entry.start_time;
-//console.log("start time of construction ",start_time,lineNo,machineNo,current_date_time)
+console.log("start time of construction ",start_time,lineNo,machineNo,current_date_time)
       
       // 2nd Query: Select spool_summary data for each machine with actual_date >= start_time and actual_date <= current_date_time
       const resultSpoolSummary = await sql.query`
@@ -4283,7 +4283,7 @@ app.post('/api/selectSpools_machinewise', async (req, res) => {
 app.post('/api/run_hrs_spool_sum', async (req, res) => {
   try {
     const { dataArray } = req.body; // Expecting an array of objects with 'actualDate' and 'Line'
-    //console.log('Received request body:', req.body);
+    console.log('Received request body:', req.body);
 
     if (!Array.isArray(dataArray)) {
       return res.status(400).json({ error: 'dataArray must be an array.' });
@@ -4380,7 +4380,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 
 // Start the server
 app.listen(port, () => {
-  //console.log(`Server is running on http://IP:${port}`);
+  console.log(`Server is running on http://IP:${port}`);
 });
 
 

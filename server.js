@@ -1209,7 +1209,7 @@ console.log("firstMachineData",firstMachineData)
 // const adjustedLocalTimeISO = adjustedLocalTime.toISOString();
 
 // console.log("Adjusted Local Time in ISO Format (IST):", adjustedLocalTimeISO);
-console.log("line.......:",Line)
+// console.log("line.......:",Line)
 // await pool.request()
 //     .input('line_number', sql.VarChar, Line)
 //     .input('actual_machine_no', sql.Int, actual_machine_no)
@@ -1236,10 +1236,10 @@ console.log("line.......:",Line)
 // const currentMinutes = String(now.getMinutes()).padStart(2, '0');
 // const currentSeconds = String(now.getSeconds()).padStart(2, '0');
 // const currentTimeString = `${currentHours}:${currentMinutes}:${currentSeconds}`;
-console.log("Current Time:", currentTimeString);
+// console.log("Current Time:", currentTimeString);
 
 // const currentDateString = now.toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
-console.log("Current Date:", currentDateString);
+// console.log("Current Date:", currentDateString);
 
 // const result = await pool.request()
 // .query(`SELECT * FROM [RUNHOURS].[dbo].[shift_master]`);

@@ -1201,14 +1201,14 @@ console.log("firstMachineData",firstMachineData)
 // // Convert local time to ISO 8601 format (UTC)
 // const localTimeISO = localTime.toISOString();
 
-console.log("Current Local Time in ISO Format (IST):", localTimeISO);
+// console.log("Current Local Time in ISO Format (IST):", localTimeISO);
 
 // // Adjust for IST manually by adding 5 hours and 30 minutes
 // const istOffset = 5 * 60 * 60 * 1000 + 30 * 60 * 1000; // 5 hours 30 minutes in milliseconds
 // const adjustedLocalTime = new Date(localTime.getTime() + istOffset);
 // const adjustedLocalTimeISO = adjustedLocalTime.toISOString();
 
-console.log("Adjusted Local Time in ISO Format (IST):", adjustedLocalTimeISO);
+// console.log("Adjusted Local Time in ISO Format (IST):", adjustedLocalTimeISO);
 console.log("line.......:",Line)
 // await pool.request()
 //     .input('line_number', sql.VarChar, Line)

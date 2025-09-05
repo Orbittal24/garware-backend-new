@@ -79,7 +79,7 @@ app.post('/api/data', async (req, res) => {
 
   const machinesData = req.body; // Assuming it's an array of { machineId, machinePulseCount, Esp, Line }
 
-  //console.log("Machine data:", machinesData);
+  console.log("Machine data:", machinesData);
 
   
   try {
@@ -4379,6 +4379,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 app.listen(port, () => {
   ////console.log(`Server is running on http://IP:${port}`);
 });
+
 
 
 

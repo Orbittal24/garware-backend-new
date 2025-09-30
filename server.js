@@ -3181,9 +3181,9 @@ app.post('/api/run_hrs_Line_machine_wholeDay', async (req, res) => {
 let machineDataa = [];
 app.post('/api/processMachineData', async (req, res) => {
   const machineDataa = req.body; // This will capture the JSON data sent from Postman
-  ////console.log('high duration calling ************************************************************************************************',machineDataa);
+  console.log('high duration calling ************************************************************************************************',machineDataa);
   // Log the received data
-  ////console.log('Data received:', machineDataa);
+  console.log('Data received for reset............................................................................:', machineDataa);
 
   try {
     let machinesDataArray;
@@ -4379,6 +4379,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 app.listen(port, () => {
   ////console.log(`Server is running on http://IP:${port}`);
 });
+
 
 
 

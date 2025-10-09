@@ -9,7 +9,7 @@ const app = express();
 const port = 3001; // Choose any available port
 
 app.use(cors({
-  origin: 'http://192.168.10.168:3000',
+  origin: ['http://192.168.10.168:3000', 'http://192.168.10.195'], // Add the second IP
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type']
 }));    
@@ -4379,6 +4379,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 app.listen(port, () => {
   ////console.log(`Server is running on http://IP:${port}`);
 });
+
 
 
 

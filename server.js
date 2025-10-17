@@ -1033,8 +1033,9 @@ console.log("all:",Line,actual_machine_no,construction, spool_date)
 //   live_count: atual_master_live_count1[0].live_count,  // Extract the live_count from the object
 //   machineId:machineId
 // });
-
+console.log(" machinesData[0]2222222222222222222222222", machinesData[0])
 const firstMachineData = machinesData[0];
+            console.log(" machinesData[0]1111111111111111111111111", machinesData[0])
             console.log("firstMachineData........",firstMachineData);
 
 console.log("Type of actual:", typeof firstMachineData.actual); // Check the type of 'actual'
@@ -4380,6 +4381,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 app.listen(port, () => {
   ////console.log(`Server is running on http://IP:${port}`);
 });
+
 
 
 

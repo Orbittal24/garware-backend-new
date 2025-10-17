@@ -1035,6 +1035,7 @@ console.log("all:",Line,actual_machine_no,construction, spool_date)
 // });
 
 const firstMachineData = machinesData[0];
+            console.log("firstMachineData........",firstMachineData);
 
 console.log("Type of actual:", typeof firstMachineData.actual); // Check the type of 'actual'
 console.log("Value of actual:", firstMachineData.actual); // Check the value of 'actual'
@@ -4379,6 +4380,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 app.listen(port, () => {
   ////console.log(`Server is running on http://IP:${port}`);
 });
+
 
 
 

@@ -1045,7 +1045,7 @@ console.log("Value of actual:", firstMachineData.actual); // Check the value of 
 
 
 console.log("firstMachineData",firstMachineData)
-            ////console.log(" machinesData[0]", machinesData[0])
+            console.log(" machinesData[0]000000000000000000000000000000000000000", machinesData[0])
   if (parseInt(firstMachineData.actual) >= 0) {
   // If 'actual' is found, do not send this response
   ////console.log('Skipping response as "actual" is present in machineData');
@@ -4380,6 +4380,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 app.listen(port, () => {
   ////console.log(`Server is running on http://IP:${port}`);
 });
+
 
 
 

@@ -2,7 +2,7 @@ const express = require('express');
 var sql = require('mssql');
 const bodyParser = require('body-parser');
 const axios = require('axios');
-const cors = require('cors');
+const cors = require('cors');f
 const { format } = require('date-fns');
 const { log } = require('console');
 const app = express();
@@ -1063,7 +1063,7 @@ const firstMachineData = machinesData[0];
           }
       } catch (err) {
           // await pool.rollback();
-          console.error('Error during pool:', err);
+          console.error('Error during pool.............1:', err);
           res.status(500).json({ message: 'Internal Server Error' });
       }
   } catch (err) {
@@ -1786,7 +1786,7 @@ const firstMachineData = machinesData[0];
 //           res.status(200).json({ message: 'Data inserted/updated successfully.', details: messages });
 //       } catch (err) {
 //           // await pool.rollback();
-//           console.error('Error during pool:', err);
+//           console.error('Error during pool.............2:', err);
 //           res.status(500).json({ message: 'Internal Server Error' });
 //       }
 //   } catch (err) {
@@ -4379,6 +4379,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 app.listen(port, () => {
   ////console.log(`Server is running on http://IP:${port}`);
 });
+
 
 
 

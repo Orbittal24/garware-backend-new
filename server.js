@@ -2,7 +2,7 @@ const express = require('express');
 var sql = require('mssql');
 const bodyParser = require('body-parser');
 const axios = require('axios');
-const cors = require('cors');f
+const cors = require('cors');
 const { format } = require('date-fns');
 const { log } = require('console');
 const app = express();
@@ -4379,6 +4379,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 app.listen(port, () => {
   ////console.log(`Server is running on http://IP:${port}`);
 });
+
 
 
 

@@ -248,7 +248,7 @@ const localTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata
 // Convert local time to ISO 8601 format (UTC)
 const localTimeISO = localTime.toISOString();
 
-console.log("Current Local Time in ISO Format (IST):", localTimeISO);
+// console.log("Current Local Time in ISO Format (IST):", localTimeISO);
 
 // Adjust for IST manually by adding 5 hours and 30 minutes
 const istOffset = 5 * 60 * 60 * 1000 + 30 * 60 * 1000; // 5 hours 30 minutes in milliseconds
@@ -303,10 +303,10 @@ const currentHours = String(now.getHours()).padStart(2, '0');
 const currentMinutes = String(now.getMinutes()).padStart(2, '0');
 const currentSeconds = String(now.getSeconds()).padStart(2, '0');
 const currentTimeString = `${currentHours}:${currentMinutes}:${currentSeconds}`;
-console.log("Current Time:", currentTimeString);
+// console.log("Current Time:", currentTimeString);
 
 const currentDateString = now.toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
-console.log("Current Date:", currentDateString);
+// console.log("Current Date:", currentDateString);
 
 const result = await pool.request()
 .query(`SELECT * FROM [RUNHOURS].[dbo].[shift_master]`);
@@ -383,7 +383,7 @@ throw new Error('No matching entry found in master_set_machine_target');
 
 const { calculate_in_mtr } = targetResult.recordset[0];
 
-console.log('Target Result2:', targetResult.recordset);
+// console.log('Target Result2:', targetResult.recordset);
 
 
 //  target   
@@ -400,7 +400,7 @@ const shifts = shiftnoResult.recordset[0].sr_no;
 
 
 
-console.log("machine_no",machineId)
+// console.log("machine_no",machineId)
 const target = await pool.request()
 .input('machine_no', sql.Int, actual_machine_no)
 .input('line_no', sql.Int, Line)
@@ -415,7 +415,7 @@ const total_target = target.recordset[0].Target_in_mtr;
 
 
 const current_shift_target = total_target / shifts
-console.log("current_shift_target: ",current_shift_target)
+// console.log("current_shift_target: ",current_shift_target)
 
 
 
@@ -460,7 +460,7 @@ console.log("current_shift_target: ",current_shift_target)
 
 
     const currentTime = new Date();
-console.log('timeeeeeeeeeeee',currentTime);
+// console.log('timeeeeeeeeeeee',currentTime);
 const currentHour1 = currentTime.getHours();
 
 if (!previousPulseCounts[machineId]) {
@@ -474,7 +474,7 @@ if (!previousPulseCounts[machineId][Esp]) {
 
 const previousPulseData = previousPulseCounts[machineId][Esp];
 
-console.log('previousPulseData',previousPulseData)
+// console.log('previousPulseData',previousPulseData)
 
 if (machinePulseCount == previousPulseData.pulseCount && machinePulseCount == 1) {   //normal insert ==1
 
@@ -493,7 +493,7 @@ if (machinePulseCount == previousPulseData.pulseCount && machinePulseCount == 1)
       if (elapsedTime > 75) {
 
 
-console.log("Esp,,,,,,: ",Esp)
+// console.log("Esp,,,,,,: ",Esp)
         await pool.request()
         .input('machine_no', sql.VarChar, machineId)
         .input('line_no', sql.VarChar, Line)
@@ -771,7 +771,7 @@ previousPulseData.pulseCount = machinePulseCount;
    
 
 
-console.log("spool_date",spool_date)
+// console.log("spool_date",spool_date)
 const atual_master_live_count = await pool.request()
   .input('machine_no', sql.VarChar, machineId)
   .input('Esp', sql.VarChar, Esp)
@@ -814,8 +814,8 @@ atual_master_live_count1.push(atual_master_live_countValue); //
 // Ensure masterPulse is compared as a number, not as an array
 let masterPulseValue = masterPulse[0]; // Extract the first value from the array if it's always a single value
 
-console.log("live count", atual_master_live_count1[0].live_count,"actual_machine_no============",actual_machine_no);
-console.log("calculatedMasterPulse", masterPulseValue);
+// console.log("live count", atual_master_live_count1[0].live_count,"actual_machine_no============",actual_machine_no);
+// console.log("calculatedMasterPulse", masterPulseValue);
 
 // Check the condition using the actual masterPulse value
 if (atual_master_live_count1[0].live_count >= masterPulseValue) {
@@ -842,8 +842,8 @@ if (atual_master_live_count1[0].live_count >= masterPulseValue) {
 }
 
 const actual = checklivecountmtr.recordset[0];
-console.log("spool target final:",spool)
-console.log("actual mtr final:",actual.spool_count,"actual_machine_no:::::::::::::::",actual_machine_no,Line)
+// console.log("spool target final:",spool)
+// console.log("actual mtr final:",actual.spool_count,"actual_machine_no:::::::::::::::",actual_machine_no,Line)
                   if (spool > 0) {
                     
                       const actual = checklivecountmtr.recordset[0];
@@ -954,7 +954,7 @@ console.log("actual mtr final:",actual.spool_count,"actual_machine_no:::::::::::
 
                          // Create a new request for each query
       const request = pool.request();
-console.log("all:",Line,actual_machine_no,construction, spool_date)
+// console.log("all:",Line,actual_machine_no,construction, spool_date)
       const existingEntry = await request
         .input('line_no', sql.Int, Line)
         .input('machine_no', sql.Int, actual_machine_no)
@@ -1033,19 +1033,19 @@ console.log("all:",Line,actual_machine_no,construction, spool_date)
 //   live_count: atual_master_live_count1[0].live_count,  // Extract the live_count from the object
 //   machineId:machineId
 // });
-console.log(" machinesData[0]2222222222222222222222222", machinesData[0])
+// console.log(" machinesData[0]2222222222222222222222222", machinesData[0])
 const firstMachineData = machinesData[0];
             // console.log(" machinesData[0]1111111111111111111111111", machinesData[0])
             // console.log("firstMachineData........",firstMachineData);
 
-console.log("Type of actual:", typeof firstMachineData.actual); // Check the type of 'actual'
-console.log("Value of actual:", firstMachineData.actual); // Check the value of 'actual'
+// console.log("Type of actual:", typeof firstMachineData.actual); // Check the type of 'actual'
+// console.log("Value of actual:", firstMachineData.actual); // Check the value of 'actual'
 
 // Ensure 'actual' is parsed correctly as an integer
 // const actualValue = parseInt(firstMachineData.actual);
 
 
-console.log("firstMachineData",firstMachineData)
+// console.log("firstMachineData",firstMachineData)
             // console.log(" machinesData[0]000000000000000000000000000000000000000", machinesData[0])
   if (parseInt(firstMachineData.actual) >= 0) {
   // If 'actual' is found, do not send this response
@@ -4381,6 +4381,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 app.listen(port, () => {
   ////console.log(`Server is running on http://IP:${port}`);
 });
+
 
 
 

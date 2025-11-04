@@ -2787,7 +2787,7 @@ app.post('/api/line_machine_construction_wholeday', async (req, res) => {
 app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
   const { actualDates } = req.body; // Expecting an array of actualDates
 
-  console.log('Received request body for /api/run_hrs_all_plant_wholeDay:', req.body);
+  // console.log('Received request body for /api/run_hrs_all_plant_wholeDay:', req.body);
 
   try {
     // Connect to the database
@@ -2810,7 +2810,7 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
           GROUP BY line_no, construction
         `);
 
-     console.log("Construction for lines for whole day: ", constructionn.recordset);
+     // console.log("Construction for lines for whole day: ", constructionn.recordset);
 
       // Prepare a list of constructions for the query
       const constructions = constructionn.recordset.map(row => `'${row.construction}'`).join(',');
@@ -2823,7 +2823,7 @@ app.post('/api/run_hrs_all_plant_wholeDay', async (req, res) => {
       `;
 
       const meterPerKgResults = await pool.request().query(query);
-console.log("Meter per kg for various constructions: ", meterPerKgResults.recordset);
+// console.log("Meter per kg for various constructions: ", meterPerKgResults.recordset);
 
       // Fetch the live count data based on the provided date
       const liveCountData = await pool.request()
@@ -2835,7 +2835,7 @@ console.log("Meter per kg for various constructions: ", meterPerKgResults.record
           GROUP BY line_no, construction
         `);
 
-   console.log("Live Count Data: ", liveCountData.recordset);
+   // console.log("Live Count Data: ", liveCountData.recordset);
 
       // Object to store total final_live_kg and final_live_mtr for each line_no
       let lineWiseTotals = {};
@@ -2893,7 +2893,7 @@ console.log("Meter per kg for various constructions: ", meterPerKgResults.record
       }
     }
 
-    console.log("Final Results...../:", results);
+    // console.log("Final Results...../:", results);
 
     // Send the response with the calculated run hours and total kg for each line across all dates
     res.status(200).json({
@@ -4387,6 +4387,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 app.listen(port, () => {
   ////console.log(`Server is running on http://IP:${port}`);
 });
+
 
 
 

@@ -81,6 +81,12 @@ app.post('/api/data', async (req, res) => {
 
   console.log("Machine data.....from controller side:", machinesData);
 
+  // ✅ Skip if actual and target exist
+  if (machinesData.actual && machinesData.target) {
+    console.log("Skipping API processing because target & actual received");
+    return res.status(200).json({ message: "Skipped — no processing required" });
+  }
+
   
   try {
 const pool = await sql.connect(dbConfig)
@@ -4381,6 +4387,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 app.listen(port, () => {
   ////console.log(`Server is running on http://IP:${port}`);
 });
+
 
 
 

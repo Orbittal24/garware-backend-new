@@ -885,7 +885,7 @@ const actual = checklivecountmtr.recordset[0];
         };
 
         const response = await axios.post(
-            'http://localhost:3000/api/processMachineData',
+            'http://localhost:3001/api/processMachineData',
             payload,
             { headers: { "Content-Type": "application/json" } }
         );
@@ -4409,6 +4409,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 app.listen(port, () => {
   ////console.log(`Server is running on http://IP:${port}`);
 });
+
 
 
 

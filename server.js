@@ -870,9 +870,31 @@ const actual = checklivecountmtr.recordset[0];
         
 
     if (statusCheck.recordset.length > 0 && statusCheck.recordset[0].status === 'disabled') {
+      console.log("data for resetting.....",Esp, machineId);
         // If the machine is disabled, only push the message
         messages.push(`Target for machine ${machineId} is completed`);
         // console.log('Target completedddddddddddddddddd');
+
+       try {
+        console.log("Calling High Duration API for machine:", machineId);
+
+        const payload = {
+            machineId: machineId,
+            Esp: Esp,
+            status: 'High Duration'
+        };
+
+        const response = await axios.post(
+            'http://localhost:3000/api/processMachineData',
+            payload,
+            { headers: { "Content-Type": "application/json" } }
+        );
+
+        console.log("High Duration API Response:", response.data);
+
+    } catch (error) {
+        console.error("Error calling High Duration API:", error.message);
+    }
         
     } else {
 
@@ -4387,6 +4409,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 app.listen(port, () => {
   ////console.log(`Server is running on http://IP:${port}`);
 });
+
 
 
 

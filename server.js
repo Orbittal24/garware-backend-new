@@ -3204,197 +3204,395 @@ app.post('/api/run_hrs_Line_machine_wholeDay', async (req, res) => {
 
 
 
-
-
-
-
 let machineDataa = [];
+
 app.post('/api/processMachineData', async (req, res) => {
-  const machineDataa = req.body; // This will capture the JSON data sent from Postman
-  console.log('high duration calling ************************************************************************************************',machineDataa);
-  // Log the received data
+  const machineDataa = req.body;
+  console.log('High duration calling ************************************************************************************************', machineDataa);
   console.log('Data received for reset............................................................................:', machineDataa);
 
   try {
     let machinesDataArray;
-    let processedMachineIds = []; // Array to store processed machineIds
+    let processedMachineIds = [];
 
-    // Check if the incoming data is an array or a single object
     if (Array.isArray(machineDataa)) {
-      machinesDataArray = machineDataa; // Handle array of data
+      machinesDataArray = machineDataa;
     } else if (machineDataa.Esp && machineDataa.machineId && machineDataa.status) {
-      // If it's a single object, wrap it into an array
       machinesDataArray = [machineDataa];
     } else {
       throw new Error('Invalid machinesData format');
     }
 
-    const pool = await sql.connect(dbConfig);
+    const pool = await sql.connect(config);
 
     for (let data of machinesDataArray) {
       const machineId = data.machineId;
       const Esp = data.Esp;
       const status = data.status;
 
-      ////console.log("Data received for processing:", machineId, Esp, status);
+      console.log("Data received for processing:", machineId, Esp, status);
 
+      let retry = 0;
+      const MAX_RETRY = 3;
 
-      
-      // Check for machine and ESP combination in the mater_line_machine_esp table
-      const line_check = await pool.request()
-        .input('machine_number', sql.Int, machineId)
-        .input('esp_no', sql.Int, Esp)
-        .query(`SELECT * FROM [RUNHOURS].[dbo].[mater_line_machine_esp] 
-                WHERE 
-                    machine_number = @machine_number
-                    AND esp_no = @esp_no`);
+      while (retry < MAX_RETRY) {
+        const transaction = new sql.Transaction(pool);
 
-      if (line_check.recordset.length > 0) {
-        const Line = line_check.recordset[0].line_number;
-        ////console.log('Line number:', Line); 
-      } else {
-        ////console.log('No matching record found in mater_line_machine_esp');
-        continue; // Skip to the next data item in the loop if no match is found
+        try {
+          await transaction.begin();
+          await pool.request().query("SET DEADLOCK_PRIORITY LOW");
+
+          const request = new sql.Request(transaction);
+
+          // ================================================================================================
+          // FETCH MACHINE LINE
+          // ================================================================================================
+          const line_check = await request
+            .input('machine_number', sql.Int, machineId)
+            .input('esp_no', sql.Int, Esp)
+            .query(`
+                SELECT * FROM [RUNHOURS].[dbo].[mater_line_machine_esp] WITH (NOLOCK)
+                WHERE machine_number = @machine_number AND esp_no = @esp_no
+            `);
+
+          if (line_check.recordset.length === 0) {
+            console.log('No matching record in mater_line_machine_esp');
+            await transaction.rollback();
+            break;
+          }
+
+          const Line = line_check.recordset[0].line_number;
+          const actual_machine_no = line_check.recordset[0].actual_machine_no;
+
+          // console.log("Line number:", Line);
+          // console.log("Actual machine number:", actual_machine_no);
+
+          // ================================================================================================
+          // GET CONSTRUCTION
+          // ================================================================================================
+          const construction_check = await request
+            .input('machine_no_con', sql.Int, actual_machine_no)
+            .input('Line_con', sql.Int, Line)
+            .query(`
+              SELECT TOP 1 *
+              FROM [RUNHOURS].[dbo].[master_set_production] WITH (NOLOCK)
+              WHERE machine_no = @machine_no_con AND line_no = @Line_con
+              ORDER BY sr_no DESC
+            `);
+
+          if (construction_check.recordset.length === 0) {
+            console.log("No construction found");
+            await transaction.rollback();
+            break;
+          }
+
+          const construction = construction_check.recordset[0].construction;
+
+          // ================================================================================================
+          // FETCH SPOOL META
+          // ================================================================================================
+          const spoolCheck = await request
+            .input('machine_no_spool_meta', sql.Int, machineId)
+            .input('Line_spool_meta', sql.Int, Line)
+            .query(`
+              SELECT TOP 1 *
+              FROM [RUNHOURS].[dbo].[master_set_production] WITH (NOLOCK)
+              WHERE machine_no = @machine_no_spool_meta AND line_no = @Line_spool_meta
+              ORDER BY sr_no DESC
+            `);
+
+          if (spoolCheck.recordset.length === 0) {
+            console.log("No spool record found");
+            await transaction.rollback();
+            break;
+          }
+
+          const spoolDate = spoolCheck.recordset[0].start_time;
+          const spoolTarget = spoolCheck.recordset[0].spool_target;
+
+          // console.log("Spool date:", spoolDate);
+          // console.log("Spool target:", spoolTarget);
+
+          // ================================================================================================
+          // CALCULATE SPOOL COUNT FROM atual_master_live
+          // ================================================================================================
+          const liveCountResult = await request
+            .input('machine_no_live', sql.Int, actual_machine_no)
+            .input('line_no_live', sql.VarChar, Line)
+            .input('shift_start_live', sql.DateTime2, spoolDate)
+            .query(`
+              SELECT SUM(spool_count) AS spool_count
+              FROM [RUNHOURS].[dbo].[atual_master_live] WITH (NOLOCK)
+              WHERE actual_machine_no = @machine_no_live 
+                AND line_no = @line_no_live
+                AND actual_date >= @shift_start_live
+            `);
+
+          const spoolCount = liveCountResult.recordset[0].spool_count || 0;
+
+          // console.log("Spool Count:", spoolCount);
+
+          // ================================================================================================
+          // INSERT INTO spool_summary
+          // ================================================================================================
+          await request
+            .input('machine_no_summary', sql.Int, actual_machine_no)
+            .input('line_no_summary', sql.Int, Line)
+            .input('Esp_summary', sql.Int, Esp)
+            .input('shift_start_summary', sql.DateTime2, spoolDate)
+            .input('construction_summary', sql.VarChar, construction)
+            .input('spool_count_summary', sql.Float, spoolCount)
+            .query(`
+              INSERT INTO [RUNHOURS].[dbo].[spool_summary]
+              (machine_no, line_no, Esp, shift_start, spool_count, construction)
+              VALUES (
+                @machine_no_summary,
+                @line_no_summary,
+                @Esp_summary,
+                @shift_start_summary,
+                @spool_count_summary,
+                @construction_summary
+              )
+            `);
+
+          // ================================================================================================
+          // RESET SPOOL COUNT
+          // ================================================================================================
+          await request
+            .input('machine_no_reset', sql.Int, actual_machine_no)
+            .input('line_no_reset', sql.VarChar, Line)
+            .query(`
+              UPDATE [RUNHOURS].[dbo].[atual_master_live] WITH (ROWLOCK, UPDLOCK)
+              SET spool_count = 0
+              WHERE actual_machine_no = @machine_no_reset 
+                AND line_no = @line_no_reset
+            `);
+
+          await transaction.commit();
+
+          console.log("Update successful: spool_count is now 0");
+          processedMachineIds.push(machineId);
+          break;
+
+        } catch (error) {
+          await transaction.rollback();
+
+          if (error.number === 1205) {
+            retry++;
+            // console.log(`Deadlock detected. Retrying ${retry}/${MAX_RETRY}...`);
+            if (retry === MAX_RETRY) throw error;
+          } else if (error.code === "EDUPEPARAM") {
+            console.error("Duplicate param found → FIXED in updated code", error);
+            throw error;
+          } else {
+            throw error;
+          }
+        }
       }
-
-      const actual_machine_no = line_check.recordset[0].actual_machine_no;
-      ////console.log('Actual machine number:', actual_machine_no); 
-
-      // Fetch construction from master_set_production table
-      const construction_check = await pool.request()
-        .input('machine_no', sql.Int, actual_machine_no)
-        .input('Line', sql.Int, line_check.recordset[0].line_number)
-        .query(`SELECT TOP 1 * FROM [RUNHOURS].[dbo].[master_set_production] 
-                WHERE 
-                    machine_no = @machine_no 
-                    AND line_no = @Line
-                ORDER BY sr_no DESC`);
-
-      if (construction_check.recordset.length > 0) {
-        const construction = construction_check.recordset[0].construction;
-        ////console.log('Construction type:', construction); 
-      } else {
-        ////console.log('No matching record found in master_set_production');
-        continue; // Skip to the next data item if no match is found
-      }
-
-      // Fetch spool date and target from master_set_production
-      const spoolCheck = await pool.request()
-        .input('machine_no', sql.Int, machineId)
-        .input('Line', sql.Int, line_check.recordset[0].line_number)
-        .query(`SELECT TOP 1 * FROM [RUNHOURS].[dbo].[master_set_production] 
-                WHERE machine_no = @machine_no AND line_no = @Line 
-                ORDER BY sr_no DESC`);
-
-      if (spoolCheck.recordset.length === 0) {
-        ////console.log(`No spool data found for machine: ${machineId}`);
-        continue; // Skip to the next iteration
-      }
-
-      const spoolDate = spoolCheck.recordset[0].start_time;
-      const spoolTarget = spoolCheck.recordset[0].spool_target;
-
-      ////console.log("Spool date:", spoolDate);
-      ////console.log("Spool target:", spoolTarget);
-
-      // Calculate the sum of spool count from atual_master_live
-      const liveCountResult = await pool.request()
-        .input('machine_no', sql.Int, actual_machine_no)  //change machineid
-        .input('Esp', sql.Int, Esp)
-        .input('line_no', sql.VarChar, line_check.recordset[0].line_number)
-        .input('shift_start', sql.DateTime2, spoolDate)
-        .query(`SELECT SUM(spool_count) AS spool_count
-                FROM [RUNHOURS].[dbo].[atual_master_live] 
-                WHERE actual_machine_no = @machine_no 
-                 
-                  AND line_no = @line_no 
-                  AND actual_date >= @shift_start`);
-
-      const spoolCount = liveCountResult.recordset[0].spool_count;
-      const actualDate = liveCountResult.recordset[0]?.actual_date;
-
-      ////console.log(`Spool Count: ${spoolCount}, Actual Date: ${actualDate}`);
-
-// Insert the spool_count and actual_date into spool_summary table
-      await pool.request()
-        .input('machine_no', sql.Int, actual_machine_no)
-        .input('line_no', sql.Int, line_check.recordset[0].line_number)
-        .input('Esp', sql.Int, Esp)
-        .input('shift_start', sql.DateTime2, spoolDate)
-        .input('construction', sql.VarChar, construction_check.recordset[0].construction)
-        .input('spool_count', sql.Float, spoolCount)
-        .input('actual_date', sql.Date, actualDate)
-        .query(`INSERT INTO [RUNHOURS].[dbo].[spool_summary] 
-                (machine_no, line_no, Esp, shift_start, spool_count, construction) 
-                VALUES (@machine_no, @line_no, @Esp, @shift_start, @spool_count, @construction)`);
-      
-      // Insert the spool_count and actual_date into spool_summary table
-      // await pool.request()
-      //   .input('machine_no', sql.Int, actual_machine_no)
-      //   .input('line_no', sql.Int, line_check.recordset[0].line_number)
-      //   .input('Esp', sql.Int, Esp)
-      //   .input('shift_start', sql.DateTime2, spoolDate)
-      //   .input('construction', sql.VarChar, construction_check.recordset[0].construction)
-      //   .input('spool_count', sql.Float, spoolCount)
-      //   .input('actual_date', sql.Date, actualDate)
-      //   .query(`INSERT INTO [RUNHOURS].[dbo].[spool_summary] 
-      //           (machine_no, line_no, Esp, shift_start, spool_count, construction) 
-      //           VALUES (@machine_no, @line_no, @Esp, @shift_start, @spool_count, @construction)`);
-
-      ////console.log(`Data inserted for machine ${machineId}`);
-var lineeee = line_check.recordset[0].line_number;
-      ////console.log("actual_machine_no:",actual_machine_no,lineeee, Esp,spoolDate,);
-      // Reset the spool_count in atual_master_live table
-      await pool.request()
-        .input('machine_no', sql.Int, actual_machine_no) //change machineid
-        .input('line_no', sql.VarChar, line_check.recordset[0].line_number)
-        .input('Esp', sql.Int, Esp)
-        .input('shift_start', sql.DateTime2, spoolDate)
-        .query(`UPDATE [RUNHOURS].[dbo].[atual_master_live]  
-                SET spool_count = 0
-                WHERE actual_machine_no = @machine_no 
-                 
-                  AND line_no = @line_no 
-                 `);
-
-      ////console.log(`Spool count reset for machine ${machineId}`);
-
-
- // Now select to check if the update was successful
-  const result = await pool.request()
-    .input('machine_no', sql.Int, actual_machine_no)
-    .input('Esp', sql.Int, Esp)
-    .input('shift_start', sql.DateTime2, spoolDate)
-    .input('line_no', sql.VarChar, line_check.recordset[0].line_number)
-    .query(`SELECT spool_count 
-            FROM [RUNHOURS].[dbo].[atual_master_live]
-            WHERE machine_no = @machine_no 
-              AND esp = @Esp
-              AND line_no = @line_no 
-              AND shift_start >= @shift_start`);
-
-  // Check if the spool_count is updated to 0
-  if (result.recordset.length > 0) {
-    const updatedCount = result.recordset[0].spool_count;
-    if (updatedCount === 0) {
-      ////console.log('Update successful: spool_count is now 0.');
-    } else {
-      ////console.log(`Update failed: spool_count is still ${updatedCount}.`);
     }
-  } else {
-    ////console.log('No records found after update.');
-  }
-      
-      // Add the processed machineId to the array
-      processedMachineIds.push(machineId);
-    }
 
-    res.status(200).json({ message: 'Highduration', processedMachineIds });
+    res.status(200).json({
+      message: "Highduration",
+      processedMachineIds
+    });
+
   } catch (err) {
-    console.error('Error processing machine data:', err);
-    res.status(500).json({ message: 'Error processing data', error: err.message });
+    console.error("Error processing machine data:", err);
+    res.status(500).json({ message: "Error processing data", error: err.message });
   }
 });
+
+
+
+
+// 8 december 2025
+// let machineDataa = [];
+// app.post('/api/processMachineData', async (req, res) => {
+//   const machineDataa = req.body; // This will capture the JSON data sent from Postman
+//   console.log('high duration calling ************************************************************************************************',machineDataa);
+//   // Log the received data
+//   console.log('Data received for reset............................................................................:', machineDataa);
+
+//   try {
+//     let machinesDataArray;
+//     let processedMachineIds = []; // Array to store processed machineIds
+
+//     // Check if the incoming data is an array or a single object
+//     if (Array.isArray(machineDataa)) {
+//       machinesDataArray = machineDataa; // Handle array of data
+//     } else if (machineDataa.Esp && machineDataa.machineId && machineDataa.status) {
+//       // If it's a single object, wrap it into an array
+//       machinesDataArray = [machineDataa];
+//     } else {
+//       throw new Error('Invalid machinesData format');
+//     }
+
+//     const pool = await sql.connect(dbConfig);
+
+//     for (let data of machinesDataArray) {
+//       const machineId = data.machineId;
+//       const Esp = data.Esp;
+//       const status = data.status;
+
+//       ////console.log("Data received for processing:", machineId, Esp, status);
+
+
+      
+//       // Check for machine and ESP combination in the mater_line_machine_esp table
+//       const line_check = await pool.request()
+//         .input('machine_number', sql.Int, machineId)
+//         .input('esp_no', sql.Int, Esp)
+//         .query(`SELECT * FROM [RUNHOURS].[dbo].[mater_line_machine_esp] 
+//                 WHERE 
+//                     machine_number = @machine_number
+//                     AND esp_no = @esp_no`);
+
+//       if (line_check.recordset.length > 0) {
+//         const Line = line_check.recordset[0].line_number;
+//         ////console.log('Line number:', Line); 
+//       } else {
+//         ////console.log('No matching record found in mater_line_machine_esp');
+//         continue; // Skip to the next data item in the loop if no match is found
+//       }
+
+//       const actual_machine_no = line_check.recordset[0].actual_machine_no;
+//       ////console.log('Actual machine number:', actual_machine_no); 
+
+//       // Fetch construction from master_set_production table
+//       const construction_check = await pool.request()
+//         .input('machine_no', sql.Int, actual_machine_no)
+//         .input('Line', sql.Int, line_check.recordset[0].line_number)
+//         .query(`SELECT TOP 1 * FROM [RUNHOURS].[dbo].[master_set_production] 
+//                 WHERE 
+//                     machine_no = @machine_no 
+//                     AND line_no = @Line
+//                 ORDER BY sr_no DESC`);
+
+//       if (construction_check.recordset.length > 0) {
+//         const construction = construction_check.recordset[0].construction;
+//         ////console.log('Construction type:', construction); 
+//       } else {
+//         ////console.log('No matching record found in master_set_production');
+//         continue; // Skip to the next data item if no match is found
+//       }
+
+//       // Fetch spool date and target from master_set_production
+//       const spoolCheck = await pool.request()
+//         .input('machine_no', sql.Int, machineId)
+//         .input('Line', sql.Int, line_check.recordset[0].line_number)
+//         .query(`SELECT TOP 1 * FROM [RUNHOURS].[dbo].[master_set_production] 
+//                 WHERE machine_no = @machine_no AND line_no = @Line 
+//                 ORDER BY sr_no DESC`);
+
+//       if (spoolCheck.recordset.length === 0) {
+//         ////console.log(`No spool data found for machine: ${machineId}`);
+//         continue; // Skip to the next iteration
+//       }
+
+//       const spoolDate = spoolCheck.recordset[0].start_time;
+//       const spoolTarget = spoolCheck.recordset[0].spool_target;
+
+//       ////console.log("Spool date:", spoolDate);
+//       ////console.log("Spool target:", spoolTarget);
+
+//       // Calculate the sum of spool count from atual_master_live
+//       const liveCountResult = await pool.request()
+//         .input('machine_no', sql.Int, actual_machine_no)  //change machineid
+//         .input('Esp', sql.Int, Esp)
+//         .input('line_no', sql.VarChar, line_check.recordset[0].line_number)
+//         .input('shift_start', sql.DateTime2, spoolDate)
+//         .query(`SELECT SUM(spool_count) AS spool_count
+//                 FROM [RUNHOURS].[dbo].[atual_master_live] 
+//                 WHERE actual_machine_no = @machine_no 
+                 
+//                   AND line_no = @line_no 
+//                   AND actual_date >= @shift_start`);
+
+//       const spoolCount = liveCountResult.recordset[0].spool_count;
+//       const actualDate = liveCountResult.recordset[0]?.actual_date;
+
+//       ////console.log(`Spool Count: ${spoolCount}, Actual Date: ${actualDate}`);
+
+// // Insert the spool_count and actual_date into spool_summary table
+//       await pool.request()
+//         .input('machine_no', sql.Int, actual_machine_no)
+//         .input('line_no', sql.Int, line_check.recordset[0].line_number)
+//         .input('Esp', sql.Int, Esp)
+//         .input('shift_start', sql.DateTime2, spoolDate)
+//         .input('construction', sql.VarChar, construction_check.recordset[0].construction)
+//         .input('spool_count', sql.Float, spoolCount)
+//         .input('actual_date', sql.Date, actualDate)
+//         .query(`INSERT INTO [RUNHOURS].[dbo].[spool_summary] 
+//                 (machine_no, line_no, Esp, shift_start, spool_count, construction) 
+//                 VALUES (@machine_no, @line_no, @Esp, @shift_start, @spool_count, @construction)`);
+      
+//       // Insert the spool_count and actual_date into spool_summary table
+//       // await pool.request()
+//       //   .input('machine_no', sql.Int, actual_machine_no)
+//       //   .input('line_no', sql.Int, line_check.recordset[0].line_number)
+//       //   .input('Esp', sql.Int, Esp)
+//       //   .input('shift_start', sql.DateTime2, spoolDate)
+//       //   .input('construction', sql.VarChar, construction_check.recordset[0].construction)
+//       //   .input('spool_count', sql.Float, spoolCount)
+//       //   .input('actual_date', sql.Date, actualDate)
+//       //   .query(`INSERT INTO [RUNHOURS].[dbo].[spool_summary] 
+//       //           (machine_no, line_no, Esp, shift_start, spool_count, construction) 
+//       //           VALUES (@machine_no, @line_no, @Esp, @shift_start, @spool_count, @construction)`);
+
+//       ////console.log(`Data inserted for machine ${machineId}`);
+// var lineeee = line_check.recordset[0].line_number;
+//       ////console.log("actual_machine_no:",actual_machine_no,lineeee, Esp,spoolDate,);
+//       // Reset the spool_count in atual_master_live table
+//       await pool.request()
+//         .input('machine_no', sql.Int, actual_machine_no) //change machineid
+//         .input('line_no', sql.VarChar, line_check.recordset[0].line_number)
+//         .input('Esp', sql.Int, Esp)
+//         .input('shift_start', sql.DateTime2, spoolDate)
+//         .query(`UPDATE [RUNHOURS].[dbo].[atual_master_live]  
+//                 SET spool_count = 0
+//                 WHERE actual_machine_no = @machine_no 
+                 
+//                   AND line_no = @line_no 
+//                  `);
+
+//       ////console.log(`Spool count reset for machine ${machineId}`);
+
+
+//  // Now select to check if the update was successful
+//   const result = await pool.request()
+//     .input('machine_no', sql.Int, actual_machine_no)
+//     .input('Esp', sql.Int, Esp)
+//     .input('shift_start', sql.DateTime2, spoolDate)
+//     .input('line_no', sql.VarChar, line_check.recordset[0].line_number)
+//     .query(`SELECT spool_count 
+//             FROM [RUNHOURS].[dbo].[atual_master_live]
+//             WHERE machine_no = @machine_no 
+//               AND esp = @Esp
+//               AND line_no = @line_no 
+//               AND shift_start >= @shift_start`);
+
+//   // Check if the spool_count is updated to 0
+//   if (result.recordset.length > 0) {
+//     const updatedCount = result.recordset[0].spool_count;
+//     if (updatedCount === 0) {
+//       ////console.log('Update successful: spool_count is now 0.');
+//     } else {
+//       ////console.log(`Update failed: spool_count is still ${updatedCount}.`);
+//     }
+//   } else {
+//     ////console.log('No records found after update.');
+//   }
+      
+//       // Add the processed machineId to the array
+//       processedMachineIds.push(machineId);
+//     }
+
+//     res.status(200).json({ message: 'Highduration', processedMachineIds });
+//   } catch (err) {
+//     console.error('Error processing machine data:', err);
+//     res.status(500).json({ message: 'Error processing data', error: err.message });
+//   }
+// });
 
 
 app.post('/api/calculateOEEAllPlant', async (req, res) => {
@@ -4409,6 +4607,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 app.listen(port, () => {
   ////console.log(`Server is running on http://IP:${port}`);
 });
+
 
 
 

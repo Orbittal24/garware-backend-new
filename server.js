@@ -3223,7 +3223,7 @@ app.post('/api/processMachineData', async (req, res) => {
       throw new Error('Invalid machinesData format');
     }
 
-    const pool = await sql.connect(config);
+    const pool = await sql.connect(dbConfig);
 
     for (let data of machinesDataArray) {
       const machineId = data.machineId;
@@ -4607,6 +4607,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 app.listen(port, () => {
   ////console.log(`Server is running on http://IP:${port}`);
 });
+
 
 
 

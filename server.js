@@ -4479,7 +4479,9 @@ app.post('/api/selectSpools_machinewise', async (req, res) => {
           AND machine_no = ${machineNo}
           AND actual_date >= ${start_time} 
           AND actual_date <= ${current_date_time}
-        GROUP BY machine_no, line_no,  shift_start, spool_count, actual_date, construction`;
+        GROUP BY machine_no, line_no,  shift_start, spool_count, actual_date, construction
+         ORDER BY actual_date DESC
+        `;
 
       // Push results to spoolSummaryResults
       spoolSummaryResults.push({
@@ -4607,6 +4609,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 app.listen(port, () => {
   ////console.log(`Server is running on http://IP:${port}`);
 });
+
 
 
 

@@ -495,8 +495,8 @@ if (machinePulseCount == previousPulseData.pulseCount && machinePulseCount == 1)
     // Online  Offline  Logic
 
     try {
-      // Check if elapsed time is greater than 25 seconds
-      if (elapsedTime > 75) {
+      // Check if elapsed time is greater than  seconds
+      if (elapsedTime > 180) {
 
 
 // console.log("Esp,,,,,,: ",Esp)
@@ -4609,6 +4609,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 app.listen(port, () => {
   ////console.log(`Server is running on http://IP:${port}`);
 });
+
 
 
 

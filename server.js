@@ -4483,36 +4483,34 @@ app.post('/api/selectSpools_machinewise', async (req, res) => {
       //    ORDER BY actual_date DESC
       //   `;
 
-      const resultSpoolSummary = await sql.query`
+  const resultSpoolSummary = await sql.query`
   SELECT 
-    machine_no, 
-    line_no, 
-    shift_start, 
-    spool_count, 
-    actual_date, 
-    construction, 
-    SUM(spools) AS total_spools
-  FROM [RUNHOURS].[dbo].[spool_summary] 
-  WHERE line_no = ${lineNo} 
-    AND machine_no = ${machineNo}
-    AND actual_date >= ${start_time} 
-    AND actual_date <= ${current_date_time}
-  GROUP BY 
-    machine_no, 
-    line_no, 
-    shift_start, 
-    spool_count, 
-    construction,
-    actual_date
-  HAVING actual_date IN (
+    ss.machine_no,
+    ss.line_no,
+    ss.shift_start,
+    ss.spool_count,
+    ss.actual_date,
+    ss.construction,
+    SUM(ss.spools) AS total_spools
+  FROM [RUNHOURS].[dbo].[spool_summary] ss
+  INNER JOIN (
     SELECT DISTINCT actual_date
     FROM [RUNHOURS].[dbo].[spool_summary]
     WHERE line_no = ${lineNo}
       AND machine_no = ${machineNo}
       AND actual_date >= ${start_time}
       AND actual_date <= ${current_date_time}
-  )
-  ORDER BY actual_date DESC
+  ) d ON ss.actual_date = d.actual_date
+  WHERE ss.line_no = ${lineNo}
+    AND ss.machine_no = ${machineNo}
+  GROUP BY 
+    ss.machine_no,
+    ss.line_no,
+    ss.shift_start,
+    ss.spool_count,
+    ss.actual_date,
+    ss.construction
+  ORDER BY ss.actual_date DESC
 `;
 
 
@@ -4642,6 +4640,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 app.listen(port, () => {
   ////console.log(`Server is running on http://IP:${port}`);
 });
+
 
 
 

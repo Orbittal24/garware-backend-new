@@ -4464,24 +4464,57 @@ app.post('/api/selectSpools_machinewise', async (req, res) => {
 ////console.log("start time of construction ",start_time,lineNo,machineNo,current_date_time)
       
       // 2nd Query: Select spool_summary data for each machine with actual_date >= start_time and actual_date <= current_date_time
-      const resultSpoolSummary = await sql.query`
-        SELECT 
-          machine_no, 
-          line_no, 
+      // const resultSpoolSummary = await sql.query`
+      //   SELECT 
+      //     machine_no, 
+      //     line_no, 
          
-          shift_start, 
-          spool_count, 
-          actual_date, 
-          construction, 
-          SUM(spools) AS total_spools
-        FROM [RUNHOURS].[dbo].[spool_summary] 
-        WHERE line_no = ${lineNo} 
-          AND machine_no = ${machineNo}
-          AND actual_date >= ${start_time} 
-          AND actual_date <= ${current_date_time}
-        GROUP BY machine_no, line_no,  shift_start, spool_count, actual_date, construction
-         ORDER BY actual_date DESC
-        `;
+      //     shift_start, 
+      //     spool_count, 
+      //     actual_date, 
+      //     construction, 
+      //     SUM(spools) AS total_spools
+      //   FROM [RUNHOURS].[dbo].[spool_summary] 
+      //   WHERE line_no = ${lineNo} 
+      //     AND machine_no = ${machineNo}
+      //     AND actual_date >= ${start_time} 
+      //     AND actual_date <= ${current_date_time}
+      //   GROUP BY machine_no, line_no,  shift_start, spool_count, actual_date, construction
+      //    ORDER BY actual_date DESC
+      //   `;
+
+      const resultSpoolSummary = await sql.query`
+  SELECT 
+    machine_no, 
+    line_no, 
+    shift_start, 
+    spool_count, 
+    actual_date, 
+    construction, 
+    SUM(spools) AS total_spools
+  FROM [RUNHOURS].[dbo].[spool_summary] 
+  WHERE line_no = ${lineNo} 
+    AND machine_no = ${machineNo}
+    AND actual_date >= ${start_time} 
+    AND actual_date <= ${current_date_time}
+  GROUP BY 
+    machine_no, 
+    line_no, 
+    shift_start, 
+    spool_count, 
+    construction,
+    actual_date
+  HAVING actual_date IN (
+    SELECT DISTINCT actual_date
+    FROM [RUNHOURS].[dbo].[spool_summary]
+    WHERE line_no = ${lineNo}
+      AND machine_no = ${machineNo}
+      AND actual_date >= ${start_time}
+      AND actual_date <= ${current_date_time}
+  )
+  ORDER BY actual_date DESC
+`;
+
 
       // Push results to spoolSummaryResults
       spoolSummaryResults.push({
@@ -4609,6 +4642,7 @@ app.post('/api/run_hrs_spool_sum', async (req, res) => {
 app.listen(port, () => {
   ////console.log(`Server is running on http://IP:${port}`);
 });
+
 
 
 

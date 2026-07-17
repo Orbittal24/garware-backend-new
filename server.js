@@ -30,7 +30,7 @@ app.use(express.json());
 const dbConfig = {
   user: 'nsa',
   password: 'namashivay',
-  server: '192.168.10.15',
+  server: '192.168.10.10',
   database: 'RUNHOURS',
   options: {
     encrypt: true, // Use this if you're on Windows Azure
